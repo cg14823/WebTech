@@ -1,40 +1,18 @@
-#titleText {
-  color: #fcfcfc;
-  font-family: "Roboto", sans-serif;
-}
-.section {
-  font-family: "Roboto", sans-serif;
-  color: #1a9526;
+#header{
+  margin-top: 5px;
 }
 
-.projectName {
-  font-family: "Lato", sans-serif;
-  font-weight: normal;
+@media only screen and (min-width: 770px) {
+    #side-nav{
+      display: none;
+    }
 }
 
-p {
-  font-family: "Lato", sans-serif;
-}
-#headerContainer {
-  background-color: #26cbc1;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-#contactDetails {
-  margin-top: 20px;
-  padding-bottom: 10px;
-  padding-top: 5px;
-  background-color: #4f5555;
-  color: #fcfcfc;
-}
-.secondary {
-  color: #a2a2a2;
-}
-.sideNav {
-  padding-top: 25px;
-}
 @media only screen and (max-width: 770px) {
-    #Navigation {
-        display: none;
+    #account {
+      display: none;
+    }
+    #side-nav{
+      display: inline;
     }
 }
