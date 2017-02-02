@@ -12,13 +12,25 @@
   <script type="text/javascript" src="js/jquery.js"></script>
 </head>
 <body>
+  <div id="mySidenav" class="sidenav">
+    <img src="images/cross.svg" class="closebtn" onclick="closeNav()" alt ="close"/>
+    <a href="#">Home</a>
+    <a href="#">Account</a>
+    <a href="#">Trips</a>
+    <a href="#">Live Trains</a>
+  </div>
   <div class="container">
-    <div class="row" id="header">
-      <div class="col-sx-4 col-md-4" id="title">
-        <h1>The Rail</h1>
+    <div class = "row" id="header">
+      <div class="col-xs-8">
+        <div class="col-xs-2">
+          <img src="images/menu.svg" class="openNav" onclick="openNav()" alt ="open"/>
+        </div>
+        <div class="col-xs-10">
+          <h1 id ="title">The Rail</h1>
+        </div>
       </div>
-      <div class="col-sx-2 col-sx-offset-4 col-md-2 col-md-offset-2" id ="account-ic">
-        <img src="http://placehold.it/50x100" alt="accountImage"/>
+      <div class="account col-xs-2">
+        <img src="images/account.svg" alt ="account"/>
       </div>
     </div>
   </div>

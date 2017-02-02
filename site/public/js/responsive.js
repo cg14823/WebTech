@@ -1,23 +1,27 @@
-var sideNavImg = '<div class="col-sx-2" id="side-nav-ic"><img src="http://placehold.it/50x100" alt="sideMenuImg"/></div>'
-var accountImg = '<div class="col-sx-2 com-md-offset-4" id ="account-ic"><img src="http://placehold.it/50x100" alt="accountImage"/></div>'
 
-$(window).resize(resizing)
 
-function resizing(){
-  if ($(window).width() >= 770) {
-      if($('#account-ic').length === 0){
-        $('#header').append(accountImg);
-      }
-      if($('#side-nav-ic').length > 0){
-        $('#side-nav-ic').remove();
-      }
+function openNav()
+{
+  $(".sidenav").width(250);
+}
+
+function closeNav()
+{
+  $(".sidenav").width(0);
+}
+$(window).resize(formatPage)
+$(document).ready(formatPage)
+
+function formatPage(){
+  console.log($(window).width());
+  if($(window).width() >= 700)
+  {
+    $(".openNav").hide();
+    $(".account").show();
   }
-  else{
-    if($('#account-ic').length > 0){
-      $('#account-ic').remove();
-    }
-    if($('#side-nav-ic').length === 0){
-      $('#header').prepend(sideNavImg);
-    }
+  else
+  {
+    $(".openNav").show();
+    $(".account").hide();
   }
 }
