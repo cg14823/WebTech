@@ -14,14 +14,16 @@ $(document).ready(formatPage)
 
 function formatPage(){
   console.log($(window).width());
-  if($(window).width() >= 700)
+  if($(window).width() >= 600)
   {
-    $(".openNav").hide();
+    $("#openNav").hide();
     $(".account").show();
+    $(".liveT").show();
   }
   else
   {
-    $(".openNav").show();
+    $("#openNav").show();
     $(".account").hide();
+    $(".liveT").hide();
   }
 }

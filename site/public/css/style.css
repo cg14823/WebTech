@@ -3,6 +3,10 @@ body{
   min-width: 400px;
 }
 
+body, html, .container-fluid {
+     height: 100%;
+}
+
 .sidenav {
   height: 100%;
   width: 0;
@@ -35,14 +39,17 @@ body{
   right: 25px;
   margin-left: 50px;
 }
-.openNav {
-  position: absolute;
-  right: 0px;
-  top: 25px;
+#openNav {
+  padding-top: 25px;
+  margin-left: -10px;
+  min-width: 50px;
+  min-height: 50px;
+  marign
 }
 
 #header{
   margin-top: 5px;
+  height: 50%;
 }
 
 #title{
@@ -51,10 +58,27 @@ body{
   color: green;
   min-width: 200px;
 }
-
-#account{
-  padding-top: 25px;
+#logo{
+  float: left;
+  display: inline;
 }
+
+.liveT{
+  font-family: 'Lato', sans-serif;
+  color: rgb(32, 156, 85);
+  font-size: 20px;
+  padding-top: 40px;
+  float:right;
+  min-width: 135px;
+}
+
+.account{
+  float: right;
+  padding-top: 25px;
+  min-width: 50px;
+  min-height: 50px;
+}
+
 @media only screen and (max-width: 770px) {
   #account {
     display: none;

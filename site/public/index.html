@@ -4,7 +4,7 @@
   <title>The Rail</title>
   <meta charset="UTF-8"/>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css?family=Passion+One" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet"/>
   <link rel="stylesheet" href="css/bootstrap.min.css"/>
   <script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
   <script type="text/javascript" src="js/bootstrap.min.js"></script>
@@ -19,21 +19,23 @@
     <a href="#">Trips</a>
     <a href="#">Live Trains</a>
   </div>
-  <div class="container">
+  <div class="container-fluid">
     <div class = "row" id="header">
       <div class="col-xs-8">
         <div class="col-xs-2">
-          <img src="images/menu.svg" class="openNav" onclick="openNav()" alt ="open"/>
+          <img src="images/menu.svg" class="img-responsive" id="openNav" onclick="openNav()" alt ="open side nav"/>
         </div>
-        <div class="col-xs-10">
-          <h1 id ="title">The Rail</h1>
+        <div class="col-xs-10" id="logo">
+          <img src="images/logotry.svg" class="img-responsive" alt ="The rail"/>
         </div>
       </div>
+      <div class="col-xs-2">
+        <a href="#" class="liveT">Live Trains</a>
+      </div>
       <div class="account col-xs-2">
-        <img src="images/account.svg" alt ="account"/>
+        <img src="images/account.svg" class="img-responsive" alt ="account"/>
       </div>
     </div>
   </div>
 </body>
-
 </html>
