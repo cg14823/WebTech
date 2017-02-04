@@ -14,7 +14,7 @@ $(document).ready(formatPage)
 
 function formatPage(){
   console.log($(window).width());
-  if($(window).width() >= 600)
+  if($(window).width() >= 760)
   {
     $("#openNav").hide();
     $(".account").show();
