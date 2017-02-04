@@ -1,10 +1,12 @@
 
 body{
+  height: 100%;
   min-width: 400px;
-}
-
-body, html, .container-fluid {
-     height: 100%;
+  background-image: url("/images/forth-bridge-blues.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 .sidenav {
@@ -14,7 +16,7 @@ body, html, .container-fluid {
   z-index: 1;
   top: 0;
   left: 0;
-  background-color: rgba(74, 166, 80, 1);
+  background-color: rgba(74, 166, 80, 0.86);
   overflow-x: hidden;
   transition: 0.5s;
   padding-top: 60px;
@@ -33,6 +35,12 @@ body, html, .container-fluid {
     color: #f1f1f1;
 }
 
+#form{
+  padding-top: 20px;
+  color: rgb(0, 0, 0);
+  background-color: rgb(51, 78, 138);
+  border-radius: 10px;
+}
 .sidenav .closebtn {
   position: absolute;
   top: 0;
@@ -48,8 +56,7 @@ body, html, .container-fluid {
 }
 
 #header{
-  margin-top: 5px;
-  height: 50%;
+  margin-top: -5px;
 }
 
 #title{
@@ -65,7 +72,7 @@ body, html, .container-fluid {
 
 .liveT{
   font-family: 'Lato', sans-serif;
-  color: rgb(32, 156, 85);
+  color: rgb(55, 65, 59);
   font-size: 20px;
   padding-top: 40px;
   float:right;
@@ -77,10 +84,4 @@ body, html, .container-fluid {
   padding-top: 25px;
   min-width: 50px;
   min-height: 50px;
-}
-
-@media only screen and (max-width: 770px) {
-  #account {
-    display: none;
-  }
 }
