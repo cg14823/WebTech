@@ -1,6 +1,12 @@
 .body{
   min-width: 400px;
 }
+.post-wrap{
+  width: 66.66%;
+  float: center;
+  padding-left: 10px;
+  padding-right: 10px;
+}
 #searchElement{
   float: left;
 }
@@ -8,5 +14,8 @@
 @media only screen and (max-width: 810px) {
   #searchInput{
     width: 100px;
+  }
+  .post-wrap{
+    width: 100%;
   }
 }
