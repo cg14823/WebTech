@@ -14,6 +14,11 @@
 
 var http = require("http");
 var fs = require("fs");
+var sql = require("sqlite3");
+var db = new sql.Database("memedatabase.db");
+
+var postTemplate = '<div class="post" id="%postTemplate%"><div class="row"><h3>%POSTTITLE%</h3></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><img class="post-image" id="post-image" src="%source%" alt="%description%"/></div><div class="row"><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes">%UPVOTES%</span></div></div><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes">%DOWNVOTES%</span></div></div><div class="col-xs-2"><span class="glyphicon glyphicon-comment"></span></div></div></div>';
+
 var OK = 200, NotFound = 404, BadType = 415, Error = 500;
 var types, banned;
 start(8080);
@@ -33,13 +38,42 @@ function start(port) {
 // Serve a request by delivering a file.
 function handle(request, response) {
     var url = request.url.toLowerCase();
-    if (url.endsWith("/")) url = url + "index.html";
-    if (isBanned(url)) return fail(response, NotFound, "URL has been banned");
-    var type = findType(url);
-    if (type == null) return fail(response, BadType, "File type unsupported");
-    var file = "./public" + url;
-    fs.readFile(file, ready);
-    function ready(err, content) { deliver(response, type, err, content); }
+    console.log(url);
+    switch (url) {
+      case '/trending':
+        //load trending page
+        db.all("select * from posts inner join users on posts.userID = users.userID order by postUpvotes desc limit 10", dbReady)
+        function dbReady(err, rows){ formatPost(response,err, rows); }
+        break;
+
+      case '/new':
+        // load new page
+        db.all("select * from posts inner join users on posts.userID = users.userID order by postID desc limit 10", dbReady)
+        function dbReady(err, rows){ formatPost(response,err, rows); }
+        break;
+
+      case '/top':
+        //load top page
+        db.all("select * from posts inner join users on posts.userID = users.userID order by postUpvotes desc limit 10", dbReady)
+        function dbReady(err, rows){ formatPost(response,err, rows); }
+        break;
+
+      case '/?':
+        // search
+        break;
+
+      default:
+        if (url.endsWith("/")) url = url + "index.html";
+        if (isBanned(url)) return fail(response, NotFound, "URL has been banned");
+        var type = findType(url);
+        if (type == null) return fail(response, BadType, "File type unsupported");
+        var file = "./public" + url;
+        fs.readFile(file, ready);
+        function ready(err, content) { deliver(response, type, err, content); }
+        break;
+    }
+
+
 }
 
 // Forbid any resources which shouldn't be delivered to the browser.
@@ -65,6 +99,26 @@ function deliver(response, type, err, content) {
     response.writeHead(OK, typeHeader);
     response.write(content);
     response.end();
+}
+
+function formatPost(response, err, rows){
+  var posts='';
+  for (var i=0; i < rows.length; i++){
+    var filledPost = postTemplate.replace("%postTemplate%",rows[i].postTitle);
+    filledPost = filledPost.replace("%POSTTITLE%",rows[i].postTitle);
+    filledPost = filledPost.replace("%source%",rows[i].imageFilename);
+    filledPost = filledPost.replace("%description%",rows[i].postTitle + '(image)');
+    var date = new Date(rows[i].postTimestamp)
+    filledPost = filledPost.replace("%DATE%",date);
+    filledPost = filledPost.replace("%UPVOTEs%",rows[i].postUpvotes);
+    filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
+    filledPost = filledPost.replace("%USER%",rows[i].username);
+    posts = posts + filledPost;
+  }
+  console.log("Here");
+  response.writeHead(OK, "text/plain");
+  response.write(posts);
+  response.end();
 }
 
 // Give a minimal failure response to the browser

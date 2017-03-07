@@ -1,6 +1,8 @@
 "use strict";
 
 function trending(){
+  console.log("Here");
+  $.get("/trending",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
@@ -11,6 +13,8 @@ function trending(){
 }
 
 function newTag(){
+  console.log("HERE");
+  $.get("/new",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
@@ -22,6 +26,7 @@ function newTag(){
 
 
 function topTag(){
+  $.get("/top",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
@@ -40,3 +45,13 @@ function memeCreator(){
   $("#memeCreatorTag").addClass("active");
   $("#memeCreatorTag").find("a").append('<span class="sr-only">(current)</span>')
 }
+
+function loadPage(data, status, xhr){
+  console.log("suceeSS");
+  if (status === "success"){
+    $(".post-wrap").empty();
+    $(".post-wrap").append(data);
+  }
+}
+
+$( document ).ready(trending);
