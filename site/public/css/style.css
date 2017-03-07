@@ -23,7 +23,7 @@
   height: auto;
 }
 .post-user{
-  color: rgb(168, 168, 168);
+  color: rgb(45, 43, 43);
 }
 .post-date{
   font-style: italic;
@@ -37,6 +37,29 @@
 }
 .loader{
   padding-bottom: 20px;
+}
+.title-logo{
+  float: left;
+  height: 50px;
+  padding: 15px 15px 15px 15px;
+  font-size: 18px;
+  line-height: 20px;
+  color: #777;
+}
+
+.top-bar{
+  background-color: rgb(248, 248, 248);
+  height:50px;
+  box-sizing: border-box;
+  padding-left: 15px;
+  padding-right: 15px;
+  border-bottom-color: rgb(231, 231, 231);
+  border-left-width: 0.8px;
+  border-right-width: 0.8px;
+  border-top-width: 0.8px;
+  border-bottom-width: 0.8px;    
+  border-style: solid;
+  border-top-style: none;
 }
 
 @media only screen and (max-width: 820px) {

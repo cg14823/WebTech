@@ -13,7 +13,6 @@ function trending(){
 }
 
 function newTag(){
-  console.log("HERE");
   $.get("/new",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();

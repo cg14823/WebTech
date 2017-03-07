@@ -38,7 +38,6 @@ function start(port) {
 // Serve a request by delivering a file.
 function handle(request, response) {
     var url = request.url.toLowerCase();
-    console.log(url);
     switch (url) {
       case '/trending':
         //load trending page
@@ -57,9 +56,17 @@ function handle(request, response) {
         db.all("select * from posts inner join users on posts.userID = users.userID order by postUpvotes desc limit 10", dbReady)
         function dbReady(err, rows){ formatPost(response,err, rows); }
         break;
-
       case '/?':
         // search
+        break;
+      case '/signin':
+        url = url +".html";
+        if (isBanned(url)) return fail(response, NotFound, "URL has been banned");
+        var type = findType(url);
+        if (type == null) return fail(response, BadType, "File type unsupported");
+        var file = "./public" + url;
+        fs.readFile(file, ready);
+        function ready(err, content) { deliver(response, type, err, content); }
         break;
 
       default:
@@ -108,18 +115,18 @@ function formatPost(response, err, rows){
     filledPost = filledPost.replace("%POSTTITLE%",rows[i].postTitle);
     filledPost = filledPost.replace("%source%",rows[i].imageFilename);
     filledPost = filledPost.replace("%description%",rows[i].postTitle + '(image)');
-    var date = new Date(rows[i].postTimestamp)
-    filledPost = filledPost.replace("%DATE%",date);
+    var date = (new Date(rows[i].postTimestamp)).toString();
+    filledPost = filledPost.replace("%DATE%",date.substring(4,24));
     filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
     filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
     filledPost = filledPost.replace("%USER%",rows[i].username);
     posts = posts + filledPost;
   }
-  console.log("Here");
   response.writeHead(OK, "text/plain");
   response.write(posts);
   response.end();
 }
+
 
 // Give a minimal failure response to the browser
 function fail(response, code, text) {
