@@ -110,7 +110,7 @@ function formatPost(response, err, rows){
     filledPost = filledPost.replace("%description%",rows[i].postTitle + '(image)');
     var date = new Date(rows[i].postTimestamp)
     filledPost = filledPost.replace("%DATE%",date);
-    filledPost = filledPost.replace("%UPVOTEs%",rows[i].postUpvotes);
+    filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
     filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
     filledPost = filledPost.replace("%USER%",rows[i].username);
     posts = posts + filledPost;
