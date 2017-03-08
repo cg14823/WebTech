@@ -33,10 +33,10 @@
   float: left;
 }
 .post{
-
+  padding-bottom: 10px;
 }
 .loader{
-  padding-bottom: 20px;
+  padding-bottom: 40px;
 }
 .title-logo{
   float: left;
@@ -46,7 +46,29 @@
   line-height: 20px;
   color: #777;
 }
+#signin-btn{
+  float:left;
+  margin-top: 6px;
+  margin-left: 15px;
+}
 
+.bTitle{
+  color: rgb(49, 150, 214);
+  font-size: 14px;
+  font-weight: bold;
+  padding-bottom: 10px;
+  padding-left: 15px;
+}
+.f-lbl{
+  float: left;
+  padding-left: 15px;
+  font-weight: bold;
+  padding-top: 7px;
+}
+#signup-form{
+  margin-left: 5px
+  float-left;
+}
 .top-bar{
   background-color: rgb(248, 248, 248);
   height:50px;
@@ -57,7 +79,7 @@
   border-left-width: 0.8px;
   border-right-width: 0.8px;
   border-top-width: 0.8px;
-  border-bottom-width: 0.8px;    
+  border-bottom-width: 0.8px;
   border-style: solid;
   border-top-style: none;
 }
@@ -72,6 +94,7 @@
   .post-wrap{
     width: 100%;
   }
+
 }
 
 @media only screen and (max-width: 767px) {

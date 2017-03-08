@@ -59,6 +59,9 @@ function handle(request, response) {
       case '/?':
         // search
         break;
+
+      case '/home':
+        break;
       case '/signin':
         url = url +".html";
         if (isBanned(url)) return fail(response, NotFound, "URL has been banned");
