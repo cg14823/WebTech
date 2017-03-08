@@ -38,20 +38,16 @@
 .loader{
   padding-bottom: 40px;
 }
-.title-logo{
-  float: left;
-  height: 50px;
-  padding: 15px 15px 15px 15px;
-  font-size: 18px;
-  line-height: 20px;
-  color: #777;
-}
+
 #signin-btn{
   float:left;
   margin-top: 6px;
   margin-left: 15px;
 }
 
+.error-box{
+  background-color: rgba(226, 122, 89, 0.85);
+}
 .bTitle{
   color: rgb(49, 150, 214);
   font-size: 14px;
@@ -65,23 +61,16 @@
   font-weight: bold;
   padding-top: 7px;
 }
+
+#separator-line{
+  border-right-width: 0.8px;
+  border-right-color: rgb(31, 31, 31);
+  border-right-style: solid;
+  box-sizing: border-box;
+}
 #signup-form{
   margin-left: 5px
   float-left;
-}
-.top-bar{
-  background-color: rgb(248, 248, 248);
-  height:50px;
-  box-sizing: border-box;
-  padding-left: 15px;
-  padding-right: 15px;
-  border-bottom-color: rgb(231, 231, 231);
-  border-left-width: 0.8px;
-  border-right-width: 0.8px;
-  border-top-width: 0.8px;
-  border-bottom-width: 0.8px;
-  border-style: solid;
-  border-top-style: none;
 }
 
 @media only screen and (max-width: 820px) {

@@ -53,4 +53,42 @@ function loadPage(data, status, xhr){
   }
 }
 
+function signUp(){
+  var errors = false;
+  var username = $("#input-username").val();
+  var email = $("#input-email1").val();
+  var password = $("#input-password1").val();
+
+  if(username.length > 20 || username.length < 5){
+    displayErrorSignUp(0);
+    errors = true;
+  }
+  if(password.length > 20 || password.length < 8){
+    if (!(/\d/.test(password) && /[a-zA-Z]/.test(password))) {
+      displayErrorSignUp(1);
+      errors = true;
+    }
+  }
+  if(errors){
+
+  }
+  else{
+
+  }
+}
+
+function displayErrorSignUp(error){
+  switch (error) {
+    case 0:
+      $("#sign-up-error").empty();
+      $("#sign-up-error").append("<p>username must be between 5 and 20 characters</p>")
+      break;
+    case 1:
+      $("#sign-up-error").empty();
+      $("#sign-up-error").append("<p>password must be between 8 and 20 characters and must contains letters and numbers</p>")
+      break;
+
+  }
+}
+
 $( document ).ready(trending);
