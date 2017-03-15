@@ -62,15 +62,18 @@ function signUp(){
     displayErrorSignUp(0);
     errors = true;
   }
-  if(password.length > 20 || password.length < 8){
-    if (!(/\d/.test(password) && /[a-zA-Z]/.test(password))) {
-      displayErrorSignUp(1);
-      errors = true;
-    }
+  else if(password.length > 20 || password.length < 8){
+    displayErrorSignUp(1);
+    errors = true;
   }
-  if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email))){
-    errors = false;
+  else if (!(/\d/.test(password)) || !(/[a-zA-Z]/.test(password))) {
+    displayErrorSignUp(2);
+    errors = true;
   }
+  else if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email))){
+    errors = true;
+  }
+
   if(errors){
 
   }
@@ -97,13 +100,13 @@ function signUpDone(data){
       $("#signin-modal").modal("toggle");
       break;
     case 1:
-      console.log("error1");
+      console.log("error1: WRONG EMAIL USERNAME OR PASSWORD");
       break;
     case 2:
-      console.log("error1");
+      console.log("error2 USER ALREADY EXIST OR EMAIL ALREADY IN USE");
       break;
     case 3:
-      console.log("error3");
+      console.log("error3: PROBLEM IN SERVER");
       break;
     default:
       break;
@@ -119,7 +122,11 @@ function displayErrorSignUp(error){
       break;
     case 1:
       $("#sign-up-error").empty();
-      $("#sign-up-error").append("<p>Password must be between 8 and 20 characters and must contains letters and numbers</p>")
+      $("#sign-up-error").append("<p>Password must be between 8 and 20 characters</p>")
+      break;
+    case 2:
+      $("#sign-up-error").empty();
+      $("#sign-up-error").append("<p>Password must contain characters and digits</p>")
       break;
   }
 }

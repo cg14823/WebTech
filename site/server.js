@@ -124,7 +124,7 @@ function submitionError (errorCode, response){
 }
 
 function validInsert(response, error){
-  if(error == null){
+  if(error === null){
     submitionError(0,response);
   }
   else{
@@ -137,12 +137,14 @@ function userDataVerify(data){
   if(data.usr.length > 20 || data.usr.length < 5){
     errors = true;
   }
-  if(data.pwd.length > 20 || data.pwd.length < 8){
-    if (!(/\d/.test(data.pwd) && /[a-zA-Z]/.test(data.pwd))) {
-      errors = true;
-    }
+  else if(data.pwd.length > 20 || data.pwd.length < 8){
+    errors = true;
   }
-  if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(data.mail))){
+  else if (!(/\d/.test(data.pwd)) || !(/[a-zA-Z]/.test(data.pwd))) {
+    errors = true;
+
+  }
+  else if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(data.mail))){
     errors = true;
   }
   return !errors;
