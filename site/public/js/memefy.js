@@ -46,7 +46,6 @@ function memeCreator(){
 }
 
 function loadPage(data, status, xhr){
-  console.log("suceeSS");
   if (status === "success"){
     $(".post-wrap").empty();
     $(".post-wrap").append(data);
@@ -69,25 +68,59 @@ function signUp(){
       errors = true;
     }
   }
+  if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email))){
+    errors = false;
+  }
   if(errors){
 
   }
   else{
 
+    var data = {usr: username, mail: email, pwd:password};
+    var datajson = JSON.stringify(data);
+    $("#sign-up-error").empty();
+    $('#signUp-btn').attr('disabled', true);
+    $.ajax({
+      type:"POST",
+      url:"/signup",
+      data:datajson,
+      success: signUpDone,
+      dataType: "json"
+    });
   }
+}
+
+function signUpDone(data){
+  console.log("SIGUNPDONE");
+  switch (data.error_code){
+    case 0:
+      $("#signin-modal").modal("toggle");
+      break;
+    case 1:
+      console.log("error1");
+      break;
+    case 2:
+      console.log("error1");
+      break;
+    case 3:
+      console.log("error3");
+      break;
+    default:
+      break;
+  }
+
 }
 
 function displayErrorSignUp(error){
   switch (error) {
     case 0:
       $("#sign-up-error").empty();
-      $("#sign-up-error").append("<p>username must be between 5 and 20 characters</p>")
+      $("#sign-up-error").append("<p>Username must be between 5 and 20 characters</p>")
       break;
     case 1:
       $("#sign-up-error").empty();
-      $("#sign-up-error").append("<p>password must be between 8 and 20 characters and must contains letters and numbers</p>")
+      $("#sign-up-error").append("<p>Password must be between 8 and 20 characters and must contains letters and numbers</p>")
       break;
-
   }
 }
 

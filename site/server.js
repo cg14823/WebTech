@@ -15,6 +15,7 @@
 var http = require("http");
 var fs = require("fs");
 var sql = require("sqlite3");
+var bcrypt = require('bcryptjs');
 var db = new sql.Database("memedatabase.db");
 
 var postTemplate = '<div class="post" id="%postTemplate%"><div class="row"><h3>%POSTTITLE%</h3></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><img class="post-image" id="post-image" src="%source%" alt="%description%"/></div><div class="row"><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes">%UPVOTES%</span></div></div><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes">%DOWNVOTES%</span></div></div><div class="col-xs-2"><span class="glyphicon glyphicon-comment"></span></div></div></div>';
@@ -22,6 +23,10 @@ var postTemplate = '<div class="post" id="%postTemplate%"><div class="row"><h3>%
 var OK = 200, NotFound = 404, BadType = 415, Error = 500;
 var types, banned;
 start(8080);
+
+
+// QUERIES PREPARED STATEMENTS
+var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt, persistentlogin) values ( ?, ?, ?, ?, ?)");
 
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
@@ -59,17 +64,20 @@ function handle(request, response) {
       case '/?':
         // search
         break;
-
-      case '/home':
+      case '/signup':
+        var store = '';
+        console.log("signup case");
+        request.on('data', function(data)
+        {
+        store += data;
+        });
+        request.on('end', function()
+        {
+          signUpF(store);
+        });
+        function signUpF (data) { sign_up(data,response);}
         break;
-      case '/signin':
-        url = url +".html";
-        if (isBanned(url)) return fail(response, NotFound, "URL has been banned");
-        var type = findType(url);
-        if (type == null) return fail(response, BadType, "File type unsupported");
-        var file = "./public" + url;
-        fs.readFile(file, ready);
-        function ready(err, content) { deliver(response, type, err, content); }
+      case '/home':
         break;
 
       default:
@@ -82,8 +90,62 @@ function handle(request, response) {
         function ready(err, content) { deliver(response, type, err, content); }
         break;
     }
+}
 
+function sign_up(store, response){
+  console.log("sign _up ");
+  var data = JSON.parse(store);
+  console.log(store);
+  if(userDataVerify(data)){
+    var salt = bcrypt.genSaltSync(10);
+    var hashd= bcrypt.hashSync(data.pwd, salt);
+    submitSignUp(response, data, hashd, salt);
+  }
+  else{
+    submitionError(1,response);
+  }
+}
 
+function submitSignUp(response, data, result, salt){
+  console.log("submitSignUp");
+  signUpInsert.run([data.usr, data.mail, result, salt],inserted);
+  function inserted(err) { validInsert(response, err); }
+
+}
+
+function submitionError (errorCode, response){
+  var message = {error_code: errorCode};
+  var signResponse = JSON.stringify(message);
+  console.log(signResponse);
+  var typeHeader = { "Content-Type": "application/json" };
+  response.writeHead(OK, typeHeader);
+  response.write(signResponse);
+  response.end();
+}
+
+function validInsert(response, error){
+  if(error == null){
+    submitionError(0,response);
+  }
+  else{
+    submitionError(3,response);
+  }
+}
+
+function userDataVerify(data){
+  var errors = false;
+  if(data.usr.length > 20 || data.usr.length < 5){
+    errors = true;
+  }
+  if(data.pwd.length > 20 || data.pwd.length < 8){
+    if (!(/\d/.test(data.pwd) && /[a-zA-Z]/.test(data.pwd))) {
+      errors = true;
+    }
+  }
+  if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(data.mail))){
+    errors = true;
+  }
+  return !errors;
 }
 
 // Forbid any resources which shouldn't be delivered to the browser.
@@ -95,6 +157,7 @@ function isBanned(url) {
     return false;
 }
 
+function progress(){}
 // Find the content type to respond with, or undefined.
 function findType(url) {
     var dot = url.lastIndexOf(".");
@@ -119,7 +182,7 @@ function formatPost(response, err, rows){
     filledPost = filledPost.replace("%source%",rows[i].imageFilename);
     filledPost = filledPost.replace("%description%",rows[i].postTitle + '(image)');
     var date = (new Date(rows[i].postTimestamp)).toString();
-    filledPost = filledPost.replace("%DATE%",date.substring(4,24));
+    filledPost = filledPost.replace("%DATE%",date.substring(4,21));
     filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
     filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
     filledPost = filledPost.replace("%USER%",rows[i].username);

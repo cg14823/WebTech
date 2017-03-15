@@ -2,7 +2,7 @@
   min-width: 400px;
 }
 .post-wrap{
-  width: 66.66%;
+  width: 50%;
   margin: auto;
   padding-left: 20px;
   padding-right: 20px;
@@ -47,6 +47,7 @@
 
 .error-box{
   background-color: rgba(226, 122, 89, 0.85);
+  padding-left: 10px;
 }
 .bTitle{
   color: rgb(49, 150, 214);
