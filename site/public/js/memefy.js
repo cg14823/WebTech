@@ -1,5 +1,8 @@
 "use strict";
 
+var usr;
+var prsstring;
+
 function trending(){
   console.log("Here");
   $.get("/trending",loadPage, "text");
@@ -9,7 +12,7 @@ function trending(){
   $("#topTag").removeClass();
   $("#memeCreatorTag").removeClass();
   $("#trendTag").addClass("active");
-  $("#trendingTag").find("a").append('<span class="sr-only">(current)</span>')
+  $("#trendingTag").find("a").append('<span class="sr-only">(current)</span>');
 }
 
 function newTag(){
@@ -20,7 +23,7 @@ function newTag(){
   $("#topTag").removeClass();
   $("#memeCreatorTag").removeClass();
   $("#newTag").addClass("active");
-  $("#newTag").find("a").append('<span class="sr-only">(current)</span>')
+  $("#newTag").find("a").append('<span class="sr-only">(current)</span>');
 }
 
 
@@ -32,7 +35,7 @@ function topTag(){
   $("#topTag").removeClass();
   $("#memeCreatorTag").removeClass();
   $("#topTag").addClass("active");
-  $("#topTag").find("a").append('<span class="sr-only">(current)</span>')
+  $("#topTag").find("a").append('<span class="sr-only">(current)</span>');
 }
 
 function memeCreator(){
@@ -42,7 +45,7 @@ function memeCreator(){
   $("#topTag").removeClass();
   $("#memeCreatorTag").removeClass();
   $("#memeCreatorTag").addClass("active");
-  $("#memeCreatorTag").find("a").append('<span class="sr-only">(current)</span>')
+  $("#memeCreatorTag").find("a").append('<span class="sr-only">(current)</span>');
 }
 
 function loadPage(data, status, xhr){
@@ -52,7 +55,8 @@ function loadPage(data, status, xhr){
   }
 }
 
-function signUp(){
+function submitSignUp(){
+  console.log("here");
   var errors = false;
   var username = $("#input-username").val();
   var email = $("#input-email1").val();
@@ -100,35 +104,29 @@ function signUpDone(data){
       $("#signin-modal").modal("toggle");
       break;
     case 1:
-      console.log("error1: WRONG EMAIL USERNAME OR PASSWORD");
+      displayErrorSignUp('<p>Sorry we are having problems connecting to the database.</p>');
       break;
     case 2:
-      console.log("error2 USER ALREADY EXIST OR EMAIL ALREADY IN USE");
+      displayErrorSignUp('<p>Invalid usernme, username must be between 5-20 characters.</p>');
       break;
     case 3:
-      console.log("error3: PROBLEM IN SERVER");
+      displayErrorSignUp('<p>Username already in use.</p>');
+      break;
+    case 4:
+      displayErrorSignUp('<p>Invalid email.</p>');
+      break;
+    case 5:
+      displayErrorSignUp('<p>Email already associated with an account</p>');
       break;
     default:
+      displayErrorSignUp('<p>Unknown Error</p>');
       break;
   }
-
 }
 
-function displayErrorSignUp(error){
-  switch (error) {
-    case 0:
-      $("#sign-up-error").empty();
-      $("#sign-up-error").append("<p>Username must be between 5 and 20 characters</p>")
-      break;
-    case 1:
-      $("#sign-up-error").empty();
-      $("#sign-up-error").append("<p>Password must be between 8 and 20 characters</p>")
-      break;
-    case 2:
-      $("#sign-up-error").empty();
-      $("#sign-up-error").append("<p>Password must contain characters and digits</p>")
-      break;
-  }
+function displayErrorSignUp(message){
+  $("#sign-up-error").empty();
+  $("#sign-up-error").append(message);
 }
 
 $( document ).ready(trending);

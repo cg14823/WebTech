@@ -28,6 +28,9 @@ start(8080);
 // QUERIES PREPARED STATEMENTS
 var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt, persistentlogin) values ( ?, ?, ?, ?, ?)");
 
+var uniqueUserName = db.prepare("select username from users where username =?");
+var uniqueEmailName = db.prepare("select userEmail from users where userEmail =?");
+
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
     types = defineTypes();
@@ -96,13 +99,52 @@ function sign_up(store, response){
   console.log("sign _up ");
   var data = JSON.parse(store);
   console.log(store);
-  if(userDataVerify(data)){
-    var salt = bcrypt.genSaltSync(10);
-    var hashd= bcrypt.hashSync(data.pwd, salt);
-    submitSignUp(response, data, hashd, salt);
+
+  var verErrors = userDataVerify(data);
+  if( verErrors === 0){
+    var salt = bcrypt.genSaltSync(12);
+    bcrypt.hash(data.pwd, salt,ready);
+    function ready(err, hashd){ usrCheck(response, data, hashd, salt);}
   }
   else{
-    submitionError(1,response);
+    submitionError(varErrors,response);
+  }
+}
+
+function usrCheck(response, data, hash, salt){
+  console.log("usrCheck");
+  uniqueUserName.run([data.usr], ready);
+  function ready(err, row) { usrCheck1(err, row, data, hash, salt, response); }
+}
+
+function usrCheck1(err, row, data, hash, salt, response){
+  if (err === null){
+    console.log("usrCheck1");
+    if (row === undefined){
+      console.log("usrCheck1.1");
+      uniqueEmailName.run([data.mail], ready);
+      function ready(error, erow) { emailCheck(error, erow, data, hash, salt, response); }
+    }
+    else{
+      submitionError(3, response);
+    }
+  }
+  else{
+    submitionError(1 ,response);
+  }
+}
+
+function emailCheck (err, row, data, hash, salt, response){
+  if (err === null){
+    if (row === undefined){
+      submitSignUp(response, data, hash, salt);
+    }
+    else{
+      submitionError(5, response);
+    }
+  }
+  else{
+    submitionError(1 ,response);
   }
 }
 
@@ -123,31 +165,35 @@ function submitionError (errorCode, response){
   response.end();
 }
 
+function validSignUp(respose){
+  
+}
+
 function validInsert(response, error){
   if(error === null){
     submitionError(0,response);
   }
   else{
-    submitionError(3,response);
+    submitionError(1,response);
   }
 }
 
 function userDataVerify(data){
-  var errors = false;
+  var errors = 0;
   if(data.usr.length > 20 || data.usr.length < 5){
-    errors = true;
+    errors = 2;
   }
   else if(data.pwd.length > 20 || data.pwd.length < 8){
-    errors = true;
+    errors = 6;
   }
   else if (!(/\d/.test(data.pwd)) || !(/[a-zA-Z]/.test(data.pwd))) {
-    errors = true;
+    errors = 6;
 
   }
   else if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(data.mail))){
-    errors = true;
+    errors = 4;
   }
-  return !errors;
+  return errors;
 }
 
 // Forbid any resources which shouldn't be delivered to the browser.

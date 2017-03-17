@@ -1,0 +1,9 @@
+ERROR CODES:
+
+0 :- No Error
+1 :- Error accessing Database
+2 :- Invalid username
+3 :- Username already exists
+4 :- Invalid email
+5 :- Email already in Database
+6 :- Invalid password

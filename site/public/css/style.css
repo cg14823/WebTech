@@ -80,6 +80,17 @@
   }
 }
 
+@media only screen and (max-width: 992px) {
+  #separator-line{
+    border-right-width: 0.0px;
+    border-right-style: none;
+    border-bottom-width: 0.8px;
+    border-bottom-color: rgb(31, 31, 31);
+    border-bottom-style: solid;
+    margin-bottom: 10px;
+  }
+}
+
 @media only screen and (max-width: 768px) {
   .post-wrap{
     width: 100%;
