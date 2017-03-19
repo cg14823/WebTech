@@ -23,6 +23,10 @@ var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><h3 on
 
 var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div class="user-and-date"><span class="comment-user">%USER%</span><span class="comment-date">%DATE%</span></div><div class="comment-content">%CONTENT%</div><div class="ups-n-downs"><div class="col-xs-1"><div class="col-xs-1"><span onclick="voteComment(%COMMENTID%,1)" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-1"><span class="votes">%UPVOTES%</span></div></div><div class="col-xs-1"><div class="col-xs-1"><span onclick="voteComment(%COMMENTID%,1)" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-1"><span class="votes">%DOWNVOTES%</span></div></div></div></div>'
 
+var accountImage = '<li><a href="#" id="clickableImage"><img src="/images/account.png" alt="account icon" id ="accountIcon" onclick="account()"/></a></li>';
+
+var signinbttn = '<li><button type="button" id="signin-btn" class="btn btn-primary" data-toggle="modal" data-target="#signin-modal">Sign In</button></li>';
+
 var OK = 200, NotFound = 404, BadType = 415, Error = 500;
 var types, banned;
 start(8080);
@@ -61,6 +65,7 @@ function handle(request, response) {
         url = "/post"
       }
     }
+    console.log(url);
 
     switch (url) {
       case '/trending':
@@ -215,7 +220,7 @@ function validSignUp(response, err, usr){
 
 function signupprocessfinished(response, err, persLog, usr){
   if(err === null){
-    var message = {error_code: 0, usr:usr, pers:persLog};
+    var message = {error_code: 0, usr:usr, pers:persLog, code: accountImage};
     var signResponse = JSON.stringify(message);
     var typeHeader = { "Content-Type": "application/json" };
     response.writeHead(OK, typeHeader);

@@ -91,6 +91,13 @@
   padding-top: 7px;
 }
 
+#accountIcon {
+  padding-top: 5px;
+}
+#clickableImage{
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
+}
 #separator-line{
   border-right-width: 0.8px;
   border-right-color: rgb(31, 31, 31);

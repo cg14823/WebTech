@@ -3,8 +3,18 @@
 var usr = null;
 var prsstring = null;
 
+function checkLogged(){
+  if( usr === null || prsstring === null){
+    $('#account-list-el').hide();
+    $('#signin-list-el').show();
+  }
+  else{
+    $('#signin-list-el').hide();
+    $('#account-list-el').show();
+  }
+}
 function trending(){
-  console.log("Here");
+  checkLogged();
   $.get("/trending",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
@@ -16,6 +26,7 @@ function trending(){
 }
 
 function newTag(){
+  checkLogged();
   $.get("/new",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
@@ -28,6 +39,7 @@ function newTag(){
 
 
 function topTag(){
+  checkLogged();
   $.get("/top",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
@@ -39,6 +51,7 @@ function topTag(){
 }
 
 function memeCreator(){
+  checkLogged();
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
@@ -70,6 +83,7 @@ function loadComments(postID) {
 }
 
 function loadPage(data, status, xhr){
+  checkLogged();
   if (status === "success"){
     $(".post-wrap").empty();
     $(".single-post").empty();
@@ -95,7 +109,6 @@ function loadSinglePage(data, status, xhr){
     $(".single-post").append(data);
   }
 }
-
 
 function submitSignUp(){
   var username = $("#input-username").val();
@@ -142,6 +155,7 @@ function signUpDone(data){
       $("#signin-modal").modal("toggle");
       usr = data.usr;
       prsstring = data.pers;
+      checkLogged();
       break;
     case 1:
       displayErrorSignUp('<p>Sorry we are having problems connecting to the database.</p>');
