@@ -66,6 +66,7 @@ function loadComments(postID) {
   $("#newTag").removeClass();
   $("#topTag").removeClass();
   $("#memeCreatorTag").removeClass();
+
 }
 
 function loadPage(data, status, xhr){
@@ -94,6 +95,7 @@ function loadSinglePage(data, status, xhr){
     $(".single-post").append(data);
   }
 }
+
 
 function submitSignUp(){
   var username = $("#input-username").val();
