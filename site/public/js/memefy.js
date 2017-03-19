@@ -1,7 +1,7 @@
 "use strict";
 
-var usr;
-var prsstring;
+var usr = null;
+var prsstring = null;
 
 function trending(){
   console.log("Here");
@@ -56,33 +56,29 @@ function loadPage(data, status, xhr){
 }
 
 function submitSignUp(){
-  console.log("here");
-  var errors = false;
   var username = $("#input-username").val();
   var email = $("#input-email1").val();
   var password = $("#input-password1").val();
-
+  var err_message = "<p>"
   if(username.length > 20 || username.length < 5){
-    displayErrorSignUp(0);
-    errors = true;
+    err_message.concat("Username must be between 5-20 characters. ");
   }
   else if(password.length > 20 || password.length < 8){
-    displayErrorSignUp(1);
-    errors = true;
+
+    err_message.concat("Password must be between 8-20 characters. ");
   }
   else if (!(/\d/.test(password)) || !(/[a-zA-Z]/.test(password))) {
-    displayErrorSignUp(2);
-    errors = true;
+    err_message.concat("Password must contain at least one letter and one number. ");
   }
   else if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email))){
-    errors = true;
+    err_message.concat("Invalid email.");
   }
 
-  if(errors){
-
+  if(err_message != "<p>"){
+    err_message.concat("</p>");
+    displayErrorSignUp(err_message);
   }
   else{
-
     var data = {usr: username, mail: email, pwd:password};
     var datajson = JSON.stringify(data);
     $("#sign-up-error").empty();
@@ -98,10 +94,12 @@ function submitSignUp(){
 }
 
 function signUpDone(data){
-  console.log("SIGUNPDONE");
   switch (data.error_code){
     case 0:
+      console.log(data);
       $("#signin-modal").modal("toggle");
+      usr = data.usr;
+      prsstring = data.pers;
       break;
     case 1:
       displayErrorSignUp('<p>Sorry we are having problems connecting to the database.</p>');

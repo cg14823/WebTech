@@ -16,6 +16,7 @@ var http = require("http");
 var fs = require("fs");
 var sql = require("sqlite3");
 var bcrypt = require('bcryptjs');
+var randomstring = require("randomstring");
 var db = new sql.Database("memedatabase.db");
 
 var postTemplate = '<div class="post" id="%postTemplate%"><div class="row"><h3>%POSTTITLE%</h3></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><img class="post-image" id="post-image" src="%source%" alt="%description%"/></div><div class="row"><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes">%UPVOTES%</span></div></div><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes">%DOWNVOTES%</span></div></div><div class="col-xs-2"><span class="glyphicon glyphicon-comment"></span></div></div></div>';
@@ -27,10 +28,9 @@ start(8080);
 
 // QUERIES PREPARED STATEMENTS
 var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt) values ( ?, ?, ?, ?)");
-
 var uniqueUserName = db.prepare("select username from users where username =?");
 var uniqueEmailName = db.prepare("select userEmail from users where userEmail =?");
-var uniqueEmailName = db.prepare("update users set persistentlogin=?");
+var addpers = db.prepare("update users set persistentlogin=? where username=?");
 
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
@@ -96,6 +96,9 @@ function handle(request, response) {
     }
 }
 
+
+// ---------------------------- SIGNUP FUNCTIONS START ------------------------
+// ----------------------------------------------------------------------------
 function sign_up(store, response){
   console.log("sign _up ");
   var data = JSON.parse(store);
@@ -104,29 +107,44 @@ function sign_up(store, response){
   var verErrors = userDataVerify(data);
   if( verErrors === 0){
     var salt = bcrypt.genSalt(12, saltready);
-    function saltready(err, salt){ hashpwd(response, data, hashd, salt);}
+    function saltready(err, salt){ hashpwd(response, data, salt);}
   }
   else{
     submitionError(varErrors,response);
   }
 }
 
-function hashpwd(response, data, hashd, salt){
+function userDataVerify(data){
+  var errors = 0;
+  if(data.usr.length > 20 || data.usr.length < 5){
+    errors = 2;
+  }
+  else if(data.pwd.length > 20 || data.pwd.length < 8){
+    errors = 6;
+  }
+  else if (!(/\d/.test(data.pwd)) || !(/[a-zA-Z]/.test(data.pwd))) {
+    errors = 6;
+
+  }
+  else if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(data.mail))){
+    errors = 4;
+  }
+  return errors;
+}
+
+function hashpwd(response, data, salt){
   bcrypt.hash(data.pwd, salt,hashready);
-  function hashready(err, salt){ usrCheck(response, data, hashd, salt);}
+  function hashready(err, hashd){ usrCheck(response, data, hashd, salt);}
 }
 
 function usrCheck(response, data, hash, salt){
-  console.log("usrCheck");
   uniqueUserName.run([data.usr], ready);
   function ready(err, row) { usrCheck1(err, row, data, hash, salt, response); }
 }
 
 function usrCheck1(err, row, data, hash, salt, response){
   if (err === null){
-    console.log("usrCheck1");
     if (row === undefined){
-      console.log("usrCheck1.1");
       uniqueEmailName.run([data.mail], ready);
       function ready(error, erow) { emailCheck(error, erow, data, hash, salt, response); }
     }
@@ -156,8 +174,32 @@ function emailCheck (err, row, data, hash, salt, response){
 function submitSignUp(response, data, result, salt){
   console.log("submitSignUp");
   signUpInsert.run([data.usr, data.mail, result, salt],inserted);
-  function inserted(err) { validInsert(response, err); }
+  function inserted(err) { validSignUp(response, err, data.usr); }
+}
 
+function validSignUp(response, err, usr){
+  if (err === null){
+    var persLog = randomstring.generate({charset: 'alphanumeric'})
+    addpers.run([persLog,usr], ready);
+    function ready(err){signupprocessfinished(response, err, persLog, usr);}
+  }
+  else{
+    submitionError(1,response);
+  }
+}
+
+function signupprocessfinished(response, err, persLog, usr){
+  if(err === null){
+    var message = {error_code: 0, usr:usr, pers:persLog};
+    var signResponse = JSON.stringify(message);
+    var typeHeader = { "Content-Type": "application/json" };
+    response.writeHead(OK, typeHeader);
+    response.write(signResponse);
+    response.end();
+  }
+  else{
+    submitionError(1,response);
+  }
 }
 
 function submitionError (errorCode, response){
@@ -170,48 +212,10 @@ function submitionError (errorCode, response){
   response.end();
 }
 
-function validSignUp(respose){
-  var salt = bcrypt.genSalt(12, saltready);
-  function saltready(err, salt){vsignup1(response, data, salt);}
-  var message = {error_code: 0, prstr:};
-  var signResponse = JSON.stringify(message);
-  console.log(signResponse);
-  var typeHeader = { "Content-Type": "application/json" };
-  response.writeHead(OK, typeHeader);
-  response.write(signResponse);
-  response.end();
-}
+// -------- SIGNUP FUNCTIONS FINISHED ------------------------------------------
+//------------------------------------------------------------------------------
 
-function vsignup1(response, data, salt){
 
-}
-
-function validInsert(response, error){
-  if(error === null){
-    submitionError(0,response);
-  }
-  else{
-    submitionError(1,response);
-  }
-}
-
-function userDataVerify(data){
-  var errors = 0;
-  if(data.usr.length > 20 || data.usr.length < 5){
-    errors = 2;
-  }
-  else if(data.pwd.length > 20 || data.pwd.length < 8){
-    errors = 6;
-  }
-  else if (!(/\d/.test(data.pwd)) || !(/[a-zA-Z]/.test(data.pwd))) {
-    errors = 6;
-
-  }
-  else if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(data.mail))){
-    errors = 4;
-  }
-  return errors;
-}
 
 // Forbid any resources which shouldn't be delivered to the browser.
 function isBanned(url) {
