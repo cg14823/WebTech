@@ -17,7 +17,9 @@ var fs = require("fs");
 var sql = require("sqlite3");
 var db = new sql.Database("memedatabase.db");
 
-var postTemplate = '<div class="post" id="%postTemplate%"><div class="row"><h3>%POSTTITLE%</h3></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><img class="post-image" id="post-image" src="%source%" alt="%description%"/></div><div class="row"><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes">%UPVOTES%</span></div></div><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes">%DOWNVOTES%</span></div></div><div class="col-xs-2"><span class="glyphicon glyphicon-comment"></span></div></div></div>';
+var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><h3 onclick="singlePost(%POSTID%)">%POSTTITLE%</h3></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><img class="post-image" id="post-image" src="%source%" alt="%description%"/></div><div class="row"><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes">%UPVOTES%</span></div></div><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes">%DOWNVOTES%</span></div></div><div class="col-xs-2"><span %LOADCOMMENTS% class="glyphicon glyphicon-comment"></span></div></div></div>';
+
+var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div class="user-and-date"><span class="comment-user">%USER%</span><span class="comment-date">%DATE%</span></div><div class="comment-content">%CONTENT%</div><div class="ups-n-downs"><div class="col-xs-1"><div class="col-xs-1"><span onclick="voteComment(%COMMENTID%,1)" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-1"><span class="votes">%UPVOTES%</span></div></div><div class="col-xs-1"><div class="col-xs-1"><span onclick="voteComment(%COMMENTID%,1)" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-1"><span class="votes">%DOWNVOTES%</span></div></div></div></div>'
 
 var OK = 200, NotFound = 404, BadType = 415, Error = 500;
 var types, banned;
@@ -38,6 +40,19 @@ function start(port) {
 // Serve a request by delivering a file.
 function handle(request, response) {
     var url = request.url.toLowerCase();
+    var postID = 0;
+    var newUrl = url.split("/");
+    if (newUrl[1] === "post"){
+      if (newUrl[2] === "comments"){
+        postID = parseInt(newUrl[3]);
+        url = "/comments"
+      }
+      else {
+        postID = parseInt(newUrl[2]);
+        url = "/post"
+      }
+    }
+
     switch (url) {
       case '/trending':
         //load trending page
@@ -70,6 +85,16 @@ function handle(request, response) {
         var file = "./public" + url;
         fs.readFile(file, ready);
         function ready(err, content) { deliver(response, type, err, content); }
+        break;
+
+      case '/post':
+        db.all("select * from posts inner join users on posts.userID = users.userID where postID = ?",postID, getPost)
+        function getPost(err, row){ putPost(response,err, row); }
+        break;
+
+      case '/comments':
+        db.all("select * from comments inner join users on comments.userID = users.userID where postID = ?",postID, getComments)
+        function getComments(err, rows){ putComments(response,err, rows); }
         break;
 
       default:
@@ -123,10 +148,51 @@ function formatPost(response, err, rows){
     filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
     filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
     filledPost = filledPost.replace("%USER%",rows[i].username);
+    filledPost = filledPost.replace("%POSTID%",rows[i].postID);
+    filledPost = filledPost.replace("%LOADCOMMENTS%","");
     posts = posts + filledPost;
   }
   response.writeHead(OK, "text/plain");
   response.write(posts);
+  response.end();
+}
+
+function putPost(response, err, row){
+  var post='';
+  var filledPost = postTemplate.replace("%postTemplate%",row[0].postTitle);
+  filledPost = filledPost.replace("%POSTTITLE%",row[0].postTitle);
+  filledPost = filledPost.replace("%source%",row[0].imageFilename);
+  filledPost = filledPost.replace("%description%",row[0].postTitle + '(image)');
+  var date = (new Date(row[0].postTimestamp)).toString();
+  filledPost = filledPost.replace("%DATE%",date.substring(4,24));
+  filledPost = filledPost.replace("%UPVOTES%",row[0].postUpvotes);
+  filledPost = filledPost.replace("%DOWNVOTES%",row[0].postDownvotes);
+  filledPost = filledPost.replace("%USER%",row[0].username);
+  filledPost = filledPost.replace("%POSTID%",row[0].postID);
+  filledPost = filledPost.replace("%LOADCOMMENTS%",'onclick="loadComments('+row[0].postID+')"');
+  post = post + filledPost;
+  response.writeHead(OK, "text/plain");
+  response.write(post);
+  response.end();
+}
+
+function putComments(response, err, rows){
+  var comments='';
+  for (var i = 0;i<rows.length;i++){
+    var filledComment = commentTemplate.replace("%USER%",rows[i].username);
+    var date = (new Date(rows[i].comTimestamp)).toString();
+    filledComment = filledComment.replace("%DATE%",date.substring(4,24));
+    filledComment = filledComment.replace("%CONTENT%",rows[i].content);
+    filledComment = filledComment.replace("%UPVOTES%",rows[i].comUpvotes);
+    filledComment = filledComment.replace("%DOWNVOTES%",rows[i].comDownvotes);
+    filledComment = filledComment.replace("%COMMENTID%",rows[i].commentID);
+    comments = comments + filledComment;
+
+  }
+  console.log(rows.length);
+  response.writeHead(OK, "text/plain");
+  response.write(comments);
+
   response.end();
 }
 

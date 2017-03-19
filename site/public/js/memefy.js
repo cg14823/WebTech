@@ -1,5 +1,7 @@
 "use strict";
 
+
+
 function trending(){
   console.log("Here");
   $.get("/trending",loadPage, "text");
@@ -45,11 +47,51 @@ function memeCreator(){
   $("#memeCreatorTag").find("a").append('<span class="sr-only">(current)</span>')
 }
 
+function singlePost(postID){
+  console.log("It worked");
+  $.get("/post/"+postID,loadSinglePage, "text");
+  $("#tabs").find(".sr-only").remove();
+  $("#trendTag").removeClass();
+  $("#newTag").removeClass();
+  $("#topTag").removeClass();
+  $("#memeCreatorTag").removeClass();
+}
+
+function loadComments(postID) {
+  console.log("It worked2");
+  $.get("/post/comments/"+postID,writeComments, "text");
+  $("#tabs").find(".sr-only").remove();
+  $("#trendTag").removeClass();
+  $("#newTag").removeClass();
+  $("#topTag").removeClass();
+  $("#memeCreatorTag").removeClass();
+}
+
 function loadPage(data, status, xhr){
-  console.log("suceeSS");
+  console.log("suceeSS1");
   if (status === "success"){
     $(".post-wrap").empty();
+    $(".single-post").empty();
+    $(".the-comments").empty();
     $(".post-wrap").append(data);
+  }
+}
+function writeComments(data, status, xhr){
+  console.log("suceeSS3");
+  if (status === "success"){
+    $(".the-comments").empty();
+    $(".the-comments").append(data);
+    console.log("suceeSS4");
+  }
+}
+
+function loadSinglePage(data, status, xhr){
+  console.log("suceeSS2");
+  if (status === "success"){
+    $(".post-wrap").empty();
+    $(".single-post").empty();
+    $(".the-comments").empty();
+    $(".single-post").append(data);
   }
 }
 

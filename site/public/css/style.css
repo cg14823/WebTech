@@ -29,6 +29,34 @@
   font-style: italic;
   color: rgb(168, 168, 168);
 }
+.comment-user{
+  font-weight: bold;
+  color: blue;
+  margin-right: 50px;
+}
+.comment-content{
+  margin-left: 10px;
+  font-size: 20px
+}
+.ups-n-downs{
+  border-top: 1px solid black;
+  height: 20px;
+}
+.ups-image{
+  padding-left: 10px;
+}
+.ups-number{
+  padding-left: 40px;
+}
+.next-comment{
+  border-style: solid;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+.user-and-date{
+  border-bottom: 2px solid blue;
+  background-color: lightgrey;
+}
 .votes{
   float: left;
 }
