@@ -15,6 +15,8 @@
 var http = require("http");
 var fs = require("fs");
 var sql = require("sqlite3");
+var bcrypt = require('bcryptjs');
+var randomstring = require("randomstring");
 var db = new sql.Database("memedatabase.db");
 
 var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><h3 onclick="singlePost(%POSTID%)">%POSTTITLE%</h3></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><img class="post-image" id="post-image" src="%source%" alt="%description%"/></div><div class="row"><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes">%UPVOTES%</span></div></div><div class="col-xs-5"><div class="col-xs-2"><span class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes">%DOWNVOTES%</span></div></div><div class="col-xs-2"><span %LOADCOMMENTS% class="glyphicon glyphicon-comment"></span></div></div></div>';
@@ -24,6 +26,13 @@ var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div cla
 var OK = 200, NotFound = 404, BadType = 415, Error = 500;
 var types, banned;
 start(8080);
+
+
+// QUERIES PREPARED STATEMENTS
+var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt) values ( ?, ?, ?, ?)");
+var uniqueUserName = db.prepare("select username from users where username =?");
+var uniqueEmailName = db.prepare("select userEmail from users where userEmail =?");
+var addpers = db.prepare("update users set persistentlogin=? where username=?");
 
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
@@ -74,17 +83,20 @@ function handle(request, response) {
       case '/?':
         // search
         break;
-
-      case '/home':
+      case '/signup':
+        var store = '';
+        console.log("signup case");
+        request.on('data', function(data)
+        {
+        store += data;
+        });
+        request.on('end', function()
+        {
+          signUpF(store);
+        });
+        function signUpF (data) { sign_up(data,response);}
         break;
-      case '/signin':
-        url = url +".html";
-        if (isBanned(url)) return fail(response, NotFound, "URL has been banned");
-        var type = findType(url);
-        if (type == null) return fail(response, BadType, "File type unsupported");
-        var file = "./public" + url;
-        fs.readFile(file, ready);
-        function ready(err, content) { deliver(response, type, err, content); }
+      case '/home':
         break;
 
       case '/post':
@@ -107,9 +119,128 @@ function handle(request, response) {
         function ready(err, content) { deliver(response, type, err, content); }
         break;
     }
-
-
 }
+
+
+// ---------------------------- SIGNUP FUNCTIONS START ------------------------
+// ----------------------------------------------------------------------------
+function sign_up(store, response){
+  console.log("sign _up ");
+  var data = JSON.parse(store);
+  console.log(store);
+
+  var verErrors = userDataVerify(data);
+  if( verErrors === 0){
+    var salt = bcrypt.genSalt(12, saltready);
+    function saltready(err, salt){ hashpwd(response, data, salt);}
+  }
+  else{
+    submitionError(varErrors,response);
+  }
+}
+
+function userDataVerify(data){
+  var errors = 0;
+  if(data.usr.length > 20 || data.usr.length < 5){
+    errors = 2;
+  }
+  else if(data.pwd.length > 20 || data.pwd.length < 8){
+    errors = 6;
+  }
+  else if (!(/\d/.test(data.pwd)) || !(/[a-zA-Z]/.test(data.pwd))) {
+    errors = 6;
+
+  }
+  else if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(data.mail))){
+    errors = 4;
+  }
+  return errors;
+}
+
+function hashpwd(response, data, salt){
+  bcrypt.hash(data.pwd, salt,hashready);
+  function hashready(err, hashd){ usrCheck(response, data, hashd, salt);}
+}
+
+function usrCheck(response, data, hash, salt){
+  uniqueUserName.run([data.usr], ready);
+  function ready(err, row) { usrCheck1(err, row, data, hash, salt, response); }
+}
+
+function usrCheck1(err, row, data, hash, salt, response){
+  if (err === null){
+    if (row === undefined){
+      uniqueEmailName.run([data.mail], ready);
+      function ready(error, erow) { emailCheck(error, erow, data, hash, salt, response); }
+    }
+    else{
+      submitionError(3, response);
+    }
+  }
+  else{
+    submitionError(1 ,response);
+  }
+}
+
+function emailCheck (err, row, data, hash, salt, response){
+  if (err === null){
+    if (row === undefined){
+      submitSignUp(response, data, hash, salt);
+    }
+    else{
+      submitionError(5, response);
+    }
+  }
+  else{
+    submitionError(1 ,response);
+  }
+}
+
+function submitSignUp(response, data, result, salt){
+  console.log("submitSignUp");
+  signUpInsert.run([data.usr, data.mail, result, salt],inserted);
+  function inserted(err) { validSignUp(response, err, data.usr); }
+}
+
+function validSignUp(response, err, usr){
+  if (err === null){
+    var persLog = randomstring.generate({charset: 'alphanumeric'})
+    addpers.run([persLog,usr], ready);
+    function ready(err){signupprocessfinished(response, err, persLog, usr);}
+  }
+  else{
+    submitionError(1,response);
+  }
+}
+
+function signupprocessfinished(response, err, persLog, usr){
+  if(err === null){
+    var message = {error_code: 0, usr:usr, pers:persLog};
+    var signResponse = JSON.stringify(message);
+    var typeHeader = { "Content-Type": "application/json" };
+    response.writeHead(OK, typeHeader);
+    response.write(signResponse);
+    response.end();
+  }
+  else{
+    submitionError(1,response);
+  }
+}
+
+function submitionError (errorCode, response){
+  var message = {error_code: errorCode};
+  var signResponse = JSON.stringify(message);
+  console.log(signResponse);
+  var typeHeader = { "Content-Type": "application/json" };
+  response.writeHead(OK, typeHeader);
+  response.write(signResponse);
+  response.end();
+}
+
+// -------- SIGNUP FUNCTIONS FINISHED ------------------------------------------
+//------------------------------------------------------------------------------
+
+
 
 // Forbid any resources which shouldn't be delivered to the browser.
 function isBanned(url) {
@@ -120,6 +251,7 @@ function isBanned(url) {
     return false;
 }
 
+function progress(){}
 // Find the content type to respond with, or undefined.
 function findType(url) {
     var dot = url.lastIndexOf(".");
@@ -144,7 +276,7 @@ function formatPost(response, err, rows){
     filledPost = filledPost.replace("%source%",rows[i].imageFilename);
     filledPost = filledPost.replace("%description%",rows[i].postTitle + '(image)');
     var date = (new Date(rows[i].postTimestamp)).toString();
-    filledPost = filledPost.replace("%DATE%",date.substring(4,24));
+    filledPost = filledPost.replace("%DATE%",date.substring(4,21));
     filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
     filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
     filledPost = filledPost.replace("%USER%",rows[i].username);
