@@ -26,10 +26,11 @@ start(8080);
 
 
 // QUERIES PREPARED STATEMENTS
-var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt, persistentlogin) values ( ?, ?, ?, ?, ?)");
+var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt) values ( ?, ?, ?, ?)");
 
 var uniqueUserName = db.prepare("select username from users where username =?");
 var uniqueEmailName = db.prepare("select userEmail from users where userEmail =?");
+var uniqueEmailName = db.prepare("update users set persistentlogin=?");
 
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
@@ -102,13 +103,17 @@ function sign_up(store, response){
 
   var verErrors = userDataVerify(data);
   if( verErrors === 0){
-    var salt = bcrypt.genSaltSync(12);
-    bcrypt.hash(data.pwd, salt,ready);
-    function ready(err, hashd){ usrCheck(response, data, hashd, salt);}
+    var salt = bcrypt.genSalt(12, saltready);
+    function saltready(err, salt){ hashpwd(response, data, hashd, salt);}
   }
   else{
     submitionError(varErrors,response);
   }
+}
+
+function hashpwd(response, data, hashd, salt){
+  bcrypt.hash(data.pwd, salt,hashready);
+  function hashready(err, salt){ usrCheck(response, data, hashd, salt);}
 }
 
 function usrCheck(response, data, hash, salt){
@@ -166,7 +171,19 @@ function submitionError (errorCode, response){
 }
 
 function validSignUp(respose){
-  
+  var salt = bcrypt.genSalt(12, saltready);
+  function saltready(err, salt){vsignup1(response, data, salt);}
+  var message = {error_code: 0, prstr:};
+  var signResponse = JSON.stringify(message);
+  console.log(signResponse);
+  var typeHeader = { "Content-Type": "application/json" };
+  response.writeHead(OK, typeHeader);
+  response.write(signResponse);
+  response.end();
+}
+
+function vsignup1(response, data, salt){
+
 }
 
 function validInsert(response, error){
