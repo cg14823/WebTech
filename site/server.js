@@ -65,19 +65,19 @@ function handle(request, response) {
     switch (url) {
       case '/trending':
         //load trending page
-        db.all("select * from posts inner join users on posts.userID = users.userID order by postUpvotes desc limit 10", dbReady)
+        db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady)
         function dbReady(err, rows){ formatPost(response,err, rows); }
         break;
 
       case '/new':
         // load new page
-        db.all("select * from posts inner join users on posts.userID = users.userID order by postID desc limit 10", dbReady)
+        db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit 10", dbReady)
         function dbReady(err, rows){ formatPost(response,err, rows); }
         break;
 
       case '/top':
         //load top page
-        db.all("select * from posts inner join users on posts.userID = users.userID order by postUpvotes desc limit 10", dbReady)
+        db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady)
         function dbReady(err, rows){ formatPost(response,err, rows); }
         break;
       case '/?':
@@ -100,12 +100,12 @@ function handle(request, response) {
         break;
 
       case '/post':
-        db.all("select * from posts inner join users on posts.userID = users.userID where postID = ?",postID, getPost)
+        db.all("select * from posts inner join users on posts.username = users.username where postID = ?",postID, getPost)
         function getPost(err, row){ putPost(response,err, row); }
         break;
 
       case '/comments':
-        db.all("select * from comments inner join users on comments.userID = users.userID where postID = ?",postID, getComments)
+        db.all("select * from comments inner join users on comments.username = users.username where postID = ?",postID, getComments)
         function getComments(err, rows){ putComments(response,err, rows); }
         break;
 
