@@ -4,17 +4,31 @@ var usr = null;
 var prsstring = null;
 
 function checkLogged(){
+
   if( usr === null || prsstring === null){
-    $('#account-list-el').hide();
-    $('#signin-list-el').show();
+    var usrCookie = readCookie("username");
+    var pstr = readCookie("pstr");
+    if(usrCookie != "" && pstr != ""){
+      usr = usrCookie;
+      prsstring = pstr;
+      $('#signin-list-el').hide();
+      $('#account-list-el').show();
+      $('#upload-button').prop('disabled', false);
+    }
+    else{
+      $('#account-list-el').hide();
+      $('#signin-list-el').show();
+      $('#upload-button').prop('disabled', true);
+    }
   }
   else{
     $('#signin-list-el').hide();
     $('#account-list-el').show();
+    $('#upload-button').prop('disabled', false);
   }
 }
 function trending(){
-  checkLogged();
+  //checkLogged();
   $.get("/trending",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
@@ -26,7 +40,7 @@ function trending(){
 }
 
 function newTag(){
-  checkLogged();
+  //checkLogged();
   $.get("/new",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
@@ -39,7 +53,7 @@ function newTag(){
 
 
 function topTag(){
-  checkLogged();
+  //checkLogged();
   $.get("/top",loadPage, "text");
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
@@ -51,7 +65,7 @@ function topTag(){
 }
 
 function memeCreator(){
-  checkLogged();
+  //checkLogged();
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
@@ -83,7 +97,7 @@ function loadComments(postID) {
 }
 
 function loadPage(data, status, xhr){
-  checkLogged();
+  //checkLogged();
   if (status === "success"){
     $(".post-wrap").empty();
     $(".single-post").empty();
@@ -108,6 +122,32 @@ function loadSinglePage(data, status, xhr){
     $(".the-comments").empty();
     $(".single-post").append(data);
   }
+}
+
+function submitSignIn(){
+  var username = $("#input-usr").val();
+  var password = $("#input-password").val();
+
+  var data = {usr: username, pwd:password};
+  var datajson = JSON.stringify(data);
+  $("#sign-up-error").empty();
+  $('#signUp-btn').attr('disabled', true);
+  $.ajax({
+    type:"POST",
+    url:"/signin",
+    data:datajson,
+    success: signUpDone,
+    dataType: "json"
+  });
+}
+
+function signout(){
+  usr = null;
+  prsstring = null;
+  document.cookie = "expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+  document.cookie = "username=;";
+  document.cookie = "pstr=;";
+  checkLogged();
 }
 
 function submitSignUp(){
@@ -151,36 +191,84 @@ function submitSignUp(){
 function signUpDone(data){
   switch (data.error_code){
     case 0:
-      console.log(data);
       $("#signin-modal").modal("toggle");
       usr = data.usr;
       prsstring = data.pers;
       checkLogged();
+
+      var usrcookie ="username=" +usr+";"
+      var pstrcookie ="pstr=" +prsstring+";"
+      var tomorrow = new Date();
+
+      tomorrow.setTime(tomorrow.getTime() + 24*60*60*1000);
+      var expireT = "expires="+tomorrow.toUTCString()+";";
+
+      document.cookie = usrcookie;
+      document.cookie = pstrcookie;
+      document.cookie = expireT;
+
       break;
     case 1:
-      displayErrorSignUp('<p>Sorry we are having problems connecting to the database.</p>');
+      displayErrorSignUp('<p>Sorry we are having problems connecting to the database.</p>',1);
       break;
     case 2:
-      displayErrorSignUp('<p>Invalid usernme, username must be between 5-20 characters.</p>');
+      displayErrorSignUp('<p>Invalid usernme, username must be between 5-20 characters.</p>',1);
       break;
     case 3:
-      displayErrorSignUp('<p>Username already in use.</p>');
+      displayErrorSignUp('<p>Username already in use.</p>',1);
       break;
     case 4:
-      displayErrorSignUp('<p>Invalid email.</p>');
+      displayErrorSignUp('<p>Invalid email.</p>',1);
       break;
     case 5:
-      displayErrorSignUp('<p>Email already associated with an account</p>');
+      displayErrorSignUp('<p>Email already associated with an account</p>',1);
+      break;
+    case 6:
+      displayErrorSignUp('<p>Invalid password</p>',1);
+      break;
+    case 7:
+      displayErrorSignUp('<p>Unkown username</p>',2);
+      break;
+    case 8:
+      displayErrorSignUp('<p>Incorrect password</p>',2);
       break;
     default:
-      displayErrorSignUp('<p>Unknown Error</p>');
+      displayErrorSignUp('<p>Unknown Error</p>',2);
       break;
   }
 }
 
-function displayErrorSignUp(message){
-  $("#sign-up-error").empty();
-  $("#sign-up-error").append(message);
+
+function displayErrorSignUp(message, errorBox){
+  switch (errorBox) {
+    case 1:
+      $("#sign-up-error").empty();
+      $("#sign-up-error").append(message);
+      break;
+    case 2:
+      $("#sign-in-error").empty();
+      $("#sign-in-error").append(message);
+      break
+  }
+
 }
 
-$( document ).ready(trending);
+function documentready(){
+  checkLogged();
+  if($("#post-wrap").is(":empty")){
+    trending();
+  }
+}
+
+function readCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+
+$( document ).ready(documentready);

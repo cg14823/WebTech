@@ -37,6 +37,7 @@ var signUpInsert = db.prepare("insert into users (username, userEmail, password,
 var uniqueUserName = db.prepare("select username from users where username =?");
 var uniqueEmailName = db.prepare("select userEmail from users where userEmail =?");
 var addpers = db.prepare("update users set persistentlogin=? where username=?");
+var signin_query = db.prepare("select password, salt from users where username=?");
 
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
@@ -65,7 +66,6 @@ function handle(request, response) {
         url = "/post"
       }
     }
-    console.log(url);
 
     switch (url) {
       case '/trending':
@@ -90,7 +90,6 @@ function handle(request, response) {
         break;
       case '/signup':
         var store = '';
-        console.log("signup case");
         request.on('data', function(data)
         {
         store += data;
@@ -101,9 +100,20 @@ function handle(request, response) {
         });
         function signUpF (data) { sign_up(data,response);}
         break;
+      case '/signin':
+        var store = '';
+        request.on('data', function(data)
+        {
+        store += data;
+        });
+        request.on('end', function()
+        {
+          signInF(store);
+        });
+        function signInF (data) { sign_in(data,response);}
+        break;
       case '/home':
         break;
-
       case '/post':
         db.all("select * from posts inner join users on posts.username = users.username where postID = ?",postID, getPost)
         function getPost(err, row){ putPost(response,err, row); }
@@ -127,13 +137,47 @@ function handle(request, response) {
 }
 
 
+// ----------------------- SIGN IN FUNCTIONS ----------------------------------
+//-----------------------------------------------------------------------------
+function sign_in(store, response){
+  var data = JSON.parse(store);
+  db.get("select * from users where username=?",[data.usr], sready);
+  function sready(err, row){ singIn_step2(err, row, data, response);}
+}
+
+function singIn_step2(err, row, data, response){
+  if(err === null){
+    if(row != undefined){
+      console.log("hashing password");
+      var salt = row.salt;
+      var dbhash = row.password;
+      bcrypt.hash(data.pwd, salt,hashready);
+      function hashready(err, hash){sigIn_hashcompare(err, hash, dbhash, data, response);}
+    }
+    else{
+      submitionError(7, response);
+    }
+  }
+  else{
+    submitionError(1 ,response);
+  }
+}
+
+function sigIn_hashcompare(err, hash, dbhash, data, response){
+  if(hash === dbhash){
+    validSignUp(response, null, data.usr);
+  }
+  else{
+    submitionError(8,response);
+  }
+}
+
+//------------------------------------------------------------------------------
+
 // ---------------------------- SIGNUP FUNCTIONS START ------------------------
 // ----------------------------------------------------------------------------
 function sign_up(store, response){
-  console.log("sign _up ");
   var data = JSON.parse(store);
-  console.log(store);
-
   var verErrors = userDataVerify(data);
   if( verErrors === 0){
     var salt = bcrypt.genSalt(12, saltready);
@@ -220,7 +264,7 @@ function validSignUp(response, err, usr){
 
 function signupprocessfinished(response, err, persLog, usr){
   if(err === null){
-    var message = {error_code: 0, usr:usr, pers:persLog, code: accountImage};
+    var message = {error_code: 0, usr:usr, pers:persLog};
     var signResponse = JSON.stringify(message);
     var typeHeader = { "Content-Type": "application/json" };
     response.writeHead(OK, typeHeader);
@@ -235,7 +279,6 @@ function signupprocessfinished(response, err, persLog, usr){
 function submitionError (errorCode, response){
   var message = {error_code: errorCode};
   var signResponse = JSON.stringify(message);
-  console.log(signResponse);
   var typeHeader = { "Content-Type": "application/json" };
   response.writeHead(OK, typeHeader);
   response.write(signResponse);
