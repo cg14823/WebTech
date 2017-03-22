@@ -23,6 +23,10 @@ var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><h3 on
 
 var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div class="user-and-date"><span class="comment-user">%USER%</span><span class="comment-date">%DATE%</span></div><div class="comment-content">%CONTENT%</div><div class="ups-n-downs"><div class="row"><div class="col-xs-4"><div class="col-xs-2"><span onclick="voteComment(%COMMENTID%,1)" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-2"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div class="col-xs-4"><div class="col-xs-2"><span onclick="voteComment(%COMMENTID%,-1)" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-2"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div></div></div></div>'
 
+var accountImage = '<li><a href="#" id="clickableImage"><img src="/images/account.png" alt="account icon" id ="accountIcon" onclick="account()"/></a></li>';
+
+var signinbttn = '<li><button type="button" id="signin-btn" class="btn btn-primary" data-toggle="modal" data-target="#signin-modal">Sign In</button></li>';
+
 var OK = 200, NotFound = 404, BadType = 415, Error = 500;
 var types, banned;
 start(8080);
@@ -33,6 +37,7 @@ var signUpInsert = db.prepare("insert into users (username, userEmail, password,
 var uniqueUserName = db.prepare("select username from users where username=?");
 var uniqueEmailName = db.prepare("select userEmail from users where userEmail =?");
 var addpers = db.prepare("update users set persistentlogin=? where username=?");
+var signin_query = db.prepare("select password, salt from users where username=?");
 
 var singlePostStatement = db.prepare("select * from posts where postID=?");
 var commentsStatement = db.prepare("select * from comments where postID = ?");
@@ -83,7 +88,6 @@ function handle(request, response) {
         break;
       case '/signup':
         var store = '';
-        console.log("signup case");
         request.on('data', function(data)
         {
         store += data;
@@ -93,6 +97,18 @@ function handle(request, response) {
           signUpF(store);
         });
         function signUpF (data) { sign_up(data,response);}
+        break;
+      case '/signin':
+        var store = '';
+        request.on('data', function(data)
+        {
+        store += data;
+        });
+        request.on('end', function()
+        {
+          signInF(store);
+        });
+        function signInF (data) { sign_in(data,response);}
         break;
       case '/home':
         break;
@@ -108,6 +124,10 @@ function handle(request, response) {
           postReady();
         });
         function postReady() {accessDBPosts(store,response);}
+
+      case '/post':
+        db.all("select * from posts inner join users on posts.username = users.username where postID = ?",postID, getPost)
+        function getPost(err, row){ putPost(response,err, row); }
         break;
 
       case '/comments':
@@ -249,13 +269,47 @@ function errorOccured(err){
 
 
 
+// ----------------------- SIGN IN FUNCTIONS ----------------------------------
+//-----------------------------------------------------------------------------
+function sign_in(store, response){
+  var data = JSON.parse(store);
+  db.get("select * from users where username=?",[data.usr], sready);
+  function sready(err, row){ singIn_step2(err, row, data, response);}
+}
+
+function singIn_step2(err, row, data, response){
+  if(err === null){
+    if(row != undefined){
+      console.log("hashing password");
+      var salt = row.salt;
+      var dbhash = row.password;
+      bcrypt.hash(data.pwd, salt,hashready);
+      function hashready(err, hash){sigIn_hashcompare(err, hash, dbhash, data, response);}
+    }
+    else{
+      submitionError(7, response);
+    }
+  }
+  else{
+    submitionError(1 ,response);
+  }
+}
+
+function sigIn_hashcompare(err, hash, dbhash, data, response){
+  if(hash === dbhash){
+    validSignUp(response, null, data.usr);
+  }
+  else{
+    submitionError(8,response);
+  }
+}
+
+//------------------------------------------------------------------------------
+
 // ---------------------------- SIGNUP FUNCTIONS START ------------------------
 // ----------------------------------------------------------------------------
 function sign_up(store, response){
-  console.log("sign _up ");
   var data = JSON.parse(store);
-  console.log(store);
-
   var verErrors = userDataVerify(data);
   if( verErrors === 0){
     var salt = bcrypt.genSalt(12, saltready);
@@ -357,7 +411,6 @@ function signupprocessfinished(response, err, persLog, usr){
 function submitionError (errorCode, response){
   var message = {error_code: errorCode};
   var signResponse = JSON.stringify(message);
-  console.log(signResponse);
   var typeHeader = { "Content-Type": "application/json" };
   response.writeHead(OK, typeHeader);
   response.write(signResponse);
