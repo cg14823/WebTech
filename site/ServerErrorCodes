@@ -7,3 +7,11 @@ ERROR CODES:
 4 :- Invalid email
 5 :- Email already in Database
 6 :- Invalid password
+7 :- Unknown username
+8 :- Password does not match
+
+
+Account VALID:
+
+CarlosGB
+pass12345
