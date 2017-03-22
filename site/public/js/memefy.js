@@ -1,7 +1,7 @@
 "use strict";
 
-var usr = null;
-var prsstring = null;
+var usr = "TJ";//null;
+var prsstring = "persistentstring";//null;
 
 function trending(){
   console.log("Here");
@@ -48,9 +48,16 @@ function memeCreator(){
   $("#memeCreatorTag").find("a").append('<span class="sr-only">(current)</span>');
 }
 
-function singlePost(postID){
-  console.log("It worked");
-  $.get("/post/"+postID,loadSinglePage, "text");
+function singlePost(mypostID){
+  var data = {postID: mypostID};
+  var datajson = JSON.stringify(data);
+  $.ajax({
+    type:"POST",
+    url:"/singlepost",
+    data:datajson,
+    success: loadSinglePage,
+    dataType: "text"
+  });
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
@@ -58,15 +65,21 @@ function singlePost(postID){
   $("#memeCreatorTag").removeClass();
 }
 
-function loadComments(postID) {
-  console.log("It worked2");
-  $.get("/post/comments/"+postID,writeComments, "text");
+function loadComments(mypostID) {
+  var data = {postID: mypostID};
+  var datajson = JSON.stringify(data);
+  $.ajax({
+    type:"POST",
+    url:"/comments",
+    data:datajson,
+    success: writeComments,
+    dataType: "text"
+  });
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
   $("#topTag").removeClass();
   $("#memeCreatorTag").removeClass();
-
 }
 
 function loadPage(data, status, xhr){
@@ -77,23 +90,38 @@ function loadPage(data, status, xhr){
     $(".post-wrap").append(data);
   }
 }
-function writeComments(data, status, xhr){
-  console.log("suceeSS3");
-  if (status === "success"){
-    $(".the-comments").empty();
-    $(".the-comments").append(data);
-    console.log("suceeSS4");
-  }
+function writeComments(data){
+  $(".the-comments").empty();
+  $(".the-comments").append(data);
 }
 
-function loadSinglePage(data, status, xhr){
-  console.log("suceeSS2");
-  if (status === "success"){
-    $(".post-wrap").empty();
-    $(".single-post").empty();
-    $(".the-comments").empty();
-    $(".single-post").append(data);
-  }
+function loadSinglePage(data){
+  $(".post-wrap").empty();
+  $(".single-post").empty();
+  $(".the-comments").empty();
+  $(".single-post").append(data);
+}
+
+function voteComment(mycommentID,vote){
+  var data = {commentID: mycommentID,voteState: vote,username: usr, prs: prsstring};
+  var datajson = JSON.stringify(data);
+  $.ajax({
+    type:"POST",
+    url:"/commentvote",
+    data:datajson,
+    success: updateVotes,
+    dataType: "text"
+  });
+}
+
+function updateVotes(data){
+    var incData = JSON.parse(data);
+    var ups = '#up' + incData.comID;
+    var downs = '#down' + incData.comID;
+    $(ups).empty();
+    $(downs).empty();
+    $(ups).append(incData.ups);
+    $(downs).append(incData.downs);
 }
 
 
