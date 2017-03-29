@@ -67,6 +67,38 @@
   padding-bottom: 40px;
 }
 
+textarea{
+  resize: vertical;
+  width: 100%;
+}
+
+.new-comment{
+  border-style: solid;
+  border-color: lightblue;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+
+.new-comment-content{
+
+}
+
+#voted-up{
+  color: blue;
+}
+
+#voted-down{
+  color: red;
+}
+
+#not-voted-up{
+  color: black;
+}
+
+#not-voted-down{
+  color: black;
+}
+
 #signin-btn{
   float:left;
   margin-top: 6px;
