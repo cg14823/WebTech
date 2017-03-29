@@ -9,6 +9,7 @@
   <script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
   <script type="text/javascript" src="js/memefy.js"></script>
   <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/upload.js"></script>
 </head>
 <body>
   <nav class="navbar navbar-default">
@@ -66,7 +67,7 @@
             <input type="text" class="form-control" id="searchInput" placeholder="Search"/>
           </span>
           <span class="search-button">
-            <button type="submit" class="btn btn-default">Search</button>
+            <button type="submit" class="btn btn-default" onclick="upload()">Search</button>
           </span>
 
         </form>
@@ -101,7 +102,6 @@
             </div>
             <div class="row">
               <div class="error-box" id="sign-in-error">
-
               </div>
             </div>
             <div class="row">

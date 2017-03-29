@@ -72,7 +72,16 @@
   margin-top: 6px;
   margin-left: 15px;
 }
+#post-input-col1{
+  padding-left: 0px;
+}
 
+.upload-label{
+  font-size: 18px;
+}
+#upload-c{
+  margin-left: 20px;
+}
 .error-box{
   background-color: rgba(226, 122, 89, 0.85);
   padding-left: 10px;
@@ -112,6 +121,10 @@
 #signup-form{
   margin-left: 5px;
   float-left;
+}
+
+.mandatory{
+  color: rgb(255, 4, 4);
 }
 
 #ref-wrap{
