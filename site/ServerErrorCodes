@@ -1,14 +1,16 @@
 ERROR CODES:
 
-0 :- No Error
-1 :- Error accessing Database
-2 :- Invalid username
-3 :- Username already exists
-4 :- Invalid email
-5 :- Email already in Database
-6 :- Invalid password
-7 :- Unknown username
-8 :- Password does not match
+000 :- No Error
+001 :- Error accessing Database
+002 :- Invalid username
+003 :- Username already exists
+004 :- Invalid email
+005 :- Email already in Database
+006 :- Invalid password
+007 :- Unknown username
+008 :- Password does not match
+009 :- user or pstr could not be verified
+010 :- upload fail
 
 
 Account VALID:

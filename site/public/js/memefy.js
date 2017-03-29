@@ -1,7 +1,43 @@
 "use strict";
 
-var usr = "TJ";//null;
-var prsstring = "persistentstring";//null;
+var usr = null;
+var prsstring = null;
+
+function uploadSubmit (){
+  if( usr === null || prsstring === null){
+    alert("You must be signed in to upload");
+  }
+  else{
+
+    var fname = $("#post-file-input").val();
+    var tl = $("#post-title-input").val();
+    var ds = $("#post-description-input").val();
+    console.log( $('#post-file-input')[0].files[0]);
+    var formData = new FormData();
+    formData.append('title',tl);
+    formData.append('description',ds);
+    formData.append('filepath',fname);
+    formData.append('user',usr);
+    formData.append('pstr',prsstring);
+    formData.append('image', $('#post-file-input')[0].files[0]);
+    console.log(formData);
+
+    $.ajax({
+      url: "/upload",
+      type: "POST",
+      data: formData,
+      mimeType: "multipart/form-data",
+      contentType: false, // NEEDED, DON'T OMIT THIS (requires jQuery 1.6+)
+      processData: false,
+      success: uploadSuccess,
+      dataType:"json"
+    });
+  }
+}
+
+function uploadSuccess(data){
+  alert(data.error_code);
+}
 
 function checkLogged(){
 
@@ -9,6 +45,7 @@ function checkLogged(){
     var usrCookie = readCookie("username");
     var pstr = readCookie("pstr");
     if(usrCookie != "" && pstr != ""){
+      /* TODO: send data to verify to server, if valid give new pstr if invalid log of*/
       usr = usrCookie;
       prsstring = pstr;
       $('#signin-list-el').hide();
@@ -78,6 +115,7 @@ function memeCreator(){
 function singlePost(mypostID){
   var data = {postID: mypostID};
   var datajson = JSON.stringify(data);
+
   $.ajax({
     type:"POST",
     url:"/singlepost",

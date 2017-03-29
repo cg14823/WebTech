@@ -13,6 +13,8 @@
 // privilege issues and port number 80 isn't already in use.
 
 var http = require("http");
+var formidable = require('formidable');
+var util = require('util');
 var fs = require("fs");
 var sql = require("sqlite3");
 var bcrypt = require('bcryptjs');
@@ -43,13 +45,14 @@ var singlePostStatement = db.prepare("select * from posts where postID=?");
 var commentsStatement = db.prepare("select * from comments where postID = ?");
 var comVotesStatement = db.prepare("select * from votesComments where commentID = ? and username = ?");
 
-var checkUser = db.prepare("select * from users where username = ? AND persistentlogin = ?");
+var checkUser = db.prepare("select * from users where username = ? and persistentLogin = ?");
 var createComVote = db.prepare("insert into votesComments values (?,?,?)");
 var updateComVote = db.prepare("update votesComments set voteState = ? where username = ? and commentID = ?");
 var deleteComVote = db.prepare("delete from votesComments where username = ? and commentID = ?");
 var retrieveComment = db.prepare("select * from comments where commentID = ?")
 var updateComment = db.prepare("update comments set comUpvotes = ?,comDownvotes = ? where commentID = ?");
 
+var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp) values (?, ?, ?, ?)");
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
     types = defineTypes();
@@ -124,6 +127,16 @@ function handle(request, response) {
           postReady();
         });
         function postReady() {accessDBPosts(store,response);}
+        break;
+
+      case '/upload':
+        var form = new formidable.IncomingForm();
+        console.log("FORM");
+        form.uploadDir =__dirname+"/public/memes"
+        form.parse(request, uploadReady);
+        form.keepExtensions = true;
+        function uploadReady(err, fields, files) { upload_step1(err, fields, files,response);}
+        break;
 
       case '/post':
         db.all("select * from posts inner join users on posts.username = users.username where postID = ?",postID, getPost)
@@ -166,6 +179,52 @@ function handle(request, response) {
         function ready(err, content) { deliver(response, type, err, content); }
         break;
     }
+}
+
+function upload_step1(err, fields, files,response){
+  console.log(err);
+  if (err === null){
+    console.log(fields.user);
+    console.log(fields.pstr);
+    checkUser.get([fields.user,fields.pstr],checkUserReady);
+    function checkUserReady(err,row){ check_user_step1(err,row,fields, files,response);}
+  }
+  else{
+    submitionError(10,response);
+  }
+}
+
+function check_user_step1(err,row,fields, files,response){
+  console.log("check user");
+  console.log(err);
+  console.log(row);
+  if(err === null && row != undefined){
+    if(row.persistentLogin === fields.pstr){
+      upload_step2(fields, files,response);
+    }
+    else{
+      submitionError(9,response);
+    }
+  }
+  else{
+    submitionError(1,response);
+  }
+}
+
+function upload_step2(fields, files,response){
+  var filePath = files.image.path.slice(files.image.path.indexOf('memes'));
+  filePath ='\\'+ filePath;
+  insertPost.run([fields.title,filePath,fields.user, Date.now()], insertPostReady);
+  function insertPostReady(err){ upload_step3(err,fields,response);}
+}
+
+function upload_step3(err,fields,response){
+  if(err === null){
+    submitionError(0,response);
+  }
+  else{
+    submitionError(1,response);
+  }
 }
 
 function accessDBPosts(data,response) {
