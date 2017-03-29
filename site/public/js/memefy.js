@@ -1,10 +1,9 @@
 "use strict";
 
-var usr = "TJ";//null;
-var prsstring = "persistentstring";//null;
+var usr = null;
+var prsstring = null;
 
 function checkLogged(){
-
   if( usr === null || prsstring === null){
     var usrCookie = readCookie("username");
     var pstr = readCookie("pstr");
@@ -124,10 +123,12 @@ function writeComments(data){
 }
 
 function loadSinglePage(data){
+  var incData = JSON.parse(data);
   $(".post-wrap").empty();
   $(".single-post").empty();
   $(".the-comments").empty();
-  $(".single-post").append(data);
+  $(".single-post").append(incData.postData);
+  loadComments(incData.postID);
 }
 
 function voteComment(mycommentID,vote){
@@ -137,19 +138,109 @@ function voteComment(mycommentID,vote){
     type:"POST",
     url:"/commentvote",
     data:datajson,
-    success: updateVotes,
+    success: updateCommentVotes,
     dataType: "text"
   });
 }
 
-function updateVotes(data){
+function votePost(mypostID,vote){
+  var data = {postID: mypostID,voteState: vote,username: usr, prs: prsstring};
+  var datajson = JSON.stringify(data);
+  $.ajax({
+    type:"POST",
+    url:"/postvote",
+    data:datajson,
+    success: updatePostVotes,
+    dataType: "text"
+  });
+}
+
+function updateCommentVotes(data){
     var incData = JSON.parse(data);
-    var ups = '#up' + incData.comID;
-    var downs = '#down' + incData.comID;
+    var ups = '#comup' + incData.comID;
+    var downs = '#comdown' + incData.comID;
+    var uparrow = '#comuparrow' + incData.comID;
+    var downarrow = '#comdownarrow' + incData.comID;
     $(ups).empty();
     $(downs).empty();
     $(ups).append(incData.ups);
     $(downs).append(incData.downs);
+    if (incData.voteState === 1){
+      switch (incData.change){
+        case 'create':
+          $(uparrow).css("color","blue");
+          break;
+
+        case 'delete':
+          $(uparrow).css("color","black");
+          break;
+
+        case 'update':
+          $(uparrow).css("color","blue");
+          $(downarrow).css("color","black");
+          break;
+      }
+    }
+    else {
+      switch (incData.change){
+        case 'create':
+          $(downarrow).css("color","red");
+          break;
+
+        case 'delete':
+          $(downarrow).css("color","black");
+          break;
+
+        case 'update':
+          $(downarrow).css("color","red");
+          $(uparrow).css("color","black");
+          break;
+      }
+    }
+}
+
+function updatePostVotes(data){
+    var incData = JSON.parse(data);
+    var ups = '#postup' + incData.postID;
+    var downs = '#postdown' + incData.postID;
+    var uparrow = '#postuparrow' + incData.postID;
+    var downarrow = '#postdownarrow' + incData.postID;
+    $(ups).empty();
+    $(downs).empty();
+    $(ups).append(incData.ups);
+    $(downs).append(incData.downs);
+    if (incData.voteState === 1){
+      switch (incData.change){
+        case 'create':
+          $(uparrow).css("color","blue");
+          break;
+
+        case 'delete':
+          $(uparrow).css("color","black");
+          break;
+
+        case 'update':
+          $(uparrow).css("color","blue");
+          $(downarrow).css("color","black");
+          break;
+      }
+    }
+    else {
+      switch (incData.change){
+        case 'create':
+          $(downarrow).css("color","red");
+          break;
+
+        case 'delete':
+          $(downarrow).css("color","black");
+          break;
+
+        case 'update':
+          $(downarrow).css("color","red");
+          $(uparrow).css("color","black");
+          break;
+      }
+    }
 }
 
 function submitSignIn(){
