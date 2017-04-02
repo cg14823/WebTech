@@ -34,6 +34,13 @@ var types, banned;
 start(8080);
 
 
+/* TODO::
+  --------------Isue list--------------------------------
+  - SERVER ALOWS ME TO UPVOTE IDEFENETLY
+  - Poor responsiveness in navbar when in mobile
+
+*/
+
 // QUERIES PREPARED STATEMENTS
 var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt) values ( ?, ?, ?, ?)");
 var uniqueUserName = db.prepare("select username from users where username=?");
@@ -74,28 +81,25 @@ function start(port) {
 // Serve a request by delivering a file.
 function handle(request, response) {
     var url = request.url.toLowerCase();
+    function dbReady(err, rows){ formatPost(response,err, rows); }
     switch (url) {
       case '/trending':
         //load trending page
-        db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady)
-        function dbReady(err, rows){ formatPost(response,err, rows); }
+        db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady);
         break;
 
       case '/new':
         // load new page
-        db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit 10", dbReady)
-        function dbReady(err, rows){ formatPost(response,err, rows); }
+        db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit 10", dbReady);
         break;
 
       case '/top':
         //load top page
-        db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady)
-        function dbReady(err, rows){ formatPost(response,err, rows); }
+        db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady);
         break;
-      case '/?':
-        // search
-        break;
+
       case '/signup':
+        //does signup maybe change to use formidable????
         var store = '';
         request.on('data', function(data)
         {
@@ -107,7 +111,9 @@ function handle(request, response) {
         });
         function signUpF (data) { sign_up(data,response);}
         break;
+
       case '/signin':
+        //does sigin maybe change to use formidable????
         var store = '';
         request.on('data', function(data)
         {
@@ -119,7 +125,18 @@ function handle(request, response) {
         });
         function signInF (data) { sign_in(data,response);}
         break;
-      case '/home':
+
+      case '/persignin':
+        var store = '';
+        request.on('data', function(data)
+        {
+          store += data;
+        });
+        request.on('end', function()
+        {
+          persReady(store, response);
+        });
+
         break;
 
       case '/singlepost':
@@ -136,9 +153,10 @@ function handle(request, response) {
         break;
 
       case '/upload':
+        //upload requested use formidable to deal with input data
         var form = new formidable.IncomingForm();
-        console.log("FORM");
         form.uploadDir =__dirname+"/public/memes"
+        form.on('error', function(err) { submitionError(12,response)});
         form.parse(request, uploadReady);
         form.keepExtensions = true;
         function uploadReady(err, fields, files) { upload_step1(err, fields, files,response);}
@@ -187,7 +205,9 @@ function handle(request, response) {
         });
         function postvoteReady() {accessDBPostVotes(store,response);}
         break;
-
+      case '/?':
+        // search
+        break;
       default:
         if (url.endsWith("/")) url = url + "index.html";
         if (isBanned(url)) return fail(response, NotFound, "URL has been banned");
@@ -200,11 +220,37 @@ function handle(request, response) {
     }
 }
 
+// persistentLogin check
+function persReady(store, response){
+  var userData = JSON.parse(store);
+  checkUser.get([userData.usr,userData.per],checkUserReady);
+  function checkUserReady(err,row){ check_user_pers(err,row,userData,response);}
+}
+
+function check_user_pers(err,row,data,response){
+  if(err === null && row != undefined){
+    if(row.persistentLogin === data.per){
+      validSignUp(response,err,data.usr);
+    }
+    else{
+      submitionError(9,response);
+    }
+  }
+  else{
+    submitionError(1,response);
+  }
+}
+
+
+/// END pers login check
+// -------------------------------------- UPLOAD CODE -------------------------
+
 function upload_step1(err, fields, files,response){
-  console.log(err);
   if (err === null){
-    console.log(fields.user);
-    console.log(fields.pstr);
+    if(fields.title.length > 40){
+      submitionError(12,response);
+      return;
+    }
     checkUser.get([fields.user,fields.pstr],checkUserReady);
     function checkUserReady(err,row){ check_user_step1(err,row,fields, files,response);}
   }
@@ -214,9 +260,6 @@ function upload_step1(err, fields, files,response){
 }
 
 function check_user_step1(err,row,fields, files,response){
-  console.log("check user");
-  console.log(err);
-  console.log(row);
   if(err === null && row != undefined){
     if(row.persistentLogin === fields.pstr){
       upload_step2(fields, files,response);
@@ -245,6 +288,8 @@ function upload_step3(err,fields,response){
     submitionError(1,response);
   }
 }
+
+//---------------------- UPLOAD END-------------------------------------------//
 
 function accessDBPosts(data,response) {
   var incData = JSON.parse(data);
@@ -447,7 +492,7 @@ function sign_in(store, response){
 function singIn_step2(err, row, data, response){
   if(err === null){
     if(row != undefined){
-      console.log("hashing password");
+      //console.log("hashing password");
       var salt = row.salt;
       var dbhash = row.password;
       bcrypt.hash(data.pwd, salt,hashready);
@@ -552,6 +597,7 @@ function submitSignUp(response, data, result, salt){
 
 function validSignUp(response, err, usr){
   if (err === null){
+    console.log("creating pers");
     var persLog = randomstring.generate({charset: 'alphanumeric'})
     addpers.run([persLog,usr], ready);
     function ready(err){signupprocessfinished(response, err, persLog, usr);}
