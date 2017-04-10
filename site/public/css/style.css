@@ -61,7 +61,13 @@
   float: left;
 }
 .post{
-  padding-bottom: 10px;
+  padding-bottom: 20px;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-bottom: 10px;
+  border-bottom-width: 1px;
+  border-bottom-color: rgb(116, 116, 116);
+  border-bottom-style: solid;
 }
 .loader{
   padding-bottom: 40px;

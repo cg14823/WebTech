@@ -60,7 +60,6 @@ function uploadSuccess(data){
     default:
       alert("Sorry our servers can not deal with your meme powers :(");
       break;
-
   }
 }
 
@@ -69,7 +68,7 @@ function checkLogged(){
   if( usr === null || prsstring === null){
     var usrCookie = readCookie("username");
     var pstr = readCookie("pstr");
-    if(usrCookie != null && pstr != null){
+    if(usrCookie != "" && pstr != ""){
       console.log("Checking user");
       var data ={usr:usrCookie, per: pstr};
       var datajson = JSON.stringify(data);
@@ -196,10 +195,10 @@ function loadComments(mypostID) {
 function loadPage(data, status, xhr){
   //checkLogged();
   if (status === "success"){
-    $(".post-wrap").empty();
+    $("#post-wrap").empty();
     $(".single-post").empty();
     $(".the-comments").empty();
-    $(".post-wrap").append(data);
+    $("#post-wrap").append(data);
   }
 }
 function writeComments(data){
@@ -209,7 +208,7 @@ function writeComments(data){
 
 function loadSinglePage(data){
   var incData = JSON.parse(data);
-  $(".post-wrap").empty();
+  $("#post-wrap").empty();
   $(".single-post").empty();
   $(".the-comments").empty();
   $(".single-post").append(incData.postData);

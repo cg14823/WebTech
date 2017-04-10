@@ -65,6 +65,8 @@ var retrievePost = db.prepare("select * from posts where postID = ?");
 var updateComment = db.prepare("update comments set comUpvotes = ?,comDownvotes = ? where commentID = ?");
 var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ? where postID = ?");
 
+var getmypost = db.prepare("select * from posts inner join users on posts.username = users.username and users.username = ? and users.persistentLogin = ? order by postTimestamp DESC limit 10");
+
 var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp) values (?, ?, ?, ?)");
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
@@ -205,6 +207,17 @@ function handle(request, response) {
         });
         function postvoteReady() {accessDBPostVotes(store,response);}
         break;
+      case '/getmyposts':
+        var store = '';
+        request.on('data', function(data)
+        {
+          store += data;
+        });
+        request.on('end', function()
+        {
+          gmpready(store, response);
+        });
+        break;
       case '/?':
         // search
         break;
@@ -220,6 +233,61 @@ function handle(request, response) {
     }
 }
 
+
+// --Load my posts-----------------------------------------
+function gmpready(store, response){
+  var data = JSON.parse(store);
+  db.all("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit 10",[data.user, data.pstr], gmpostsready);
+  function gmpostsready(err,row){ gmpost2(err,row,response);}
+}
+
+function gmpost2(err,rows,response){
+  if(err == null){
+    if(rows != undefined){
+      var posts='';
+      for (var i=0; i < rows.length; i++){
+        var filledPost = postTemplate.replace("%postTemplate%",rows[i].postTitle);
+        filledPost = filledPost.replace("%POSTTITLE%",rows[i].postTitle);
+        filledPost = filledPost.replace("%source%",rows[i].imageFilename);
+        filledPost = filledPost.replace("%description%",rows[i].postTitle + '(image)');
+        var date = (new Date(rows[i].postTimestamp)).toString();
+        filledPost = filledPost.replace("%DATE%",date.substring(4,21));
+        filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
+        filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
+        filledPost = filledPost.replace("%USER%",rows[i].username);
+        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
+        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
+        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
+        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
+        filledPost = filledPost.replace("%UPID%","postup" + rows[i].postID);
+        filledPost = filledPost.replace("%DOWNID%","postdown" + rows[i].postID);
+        filledPost = filledPost.replace("%UPARROWID%","postuparrow" + rows[i].postID);
+        filledPost = filledPost.replace("%DOWNARROWID%","postdownarrow" + rows[i].postID);
+        filledPost = filledPost.replace("%LOADCOMMENTS%",'onclick="loadComments('+rows[i].postID+')"');
+        posts = posts + filledPost;
+      }
+      textResponse(posts,response);
+    }
+    else{
+      textResponse('<p>You have no posts :(</p>',response);
+    }
+  }
+  else{
+    textResponse('<p>Could not access database soyry.</p>',response);
+  }
+}
+
+function textResponse(data,response){
+  var typeHeader = { "Content-Type": "text/plain" };
+  response.writeHead(OK, typeHeader);
+  response.write(data);
+  response.end();
+}
+
+
+
+
+// LOAD my posts end --------------------------------
 // persistentLogin check
 function persReady(store, response){
   var userData = JSON.parse(store);
