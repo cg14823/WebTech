@@ -53,20 +53,20 @@ var signin_query = db.prepare("select password, salt from users where username=?
 var singlePostStatement = db.prepare("select * from posts where postID=?");
 var commentsStatement = db.prepare("select * from comments where postID = ?");
 var comVotesStatement = db.prepare("select * from votesComments where commentID = ? and username = ?");
-var postVotesStatement = db.prepare("select * from votesPost where postID = ? and username = ?");
+var postVotesStatement = db.prepare("select * from votesPosts where postID = ? and username = ?");
 
 var checkUser = db.prepare("select * from users where username = ? and persistentLogin = ?");
 var createComVote = db.prepare("insert into votesComments values (?,?,?)");
 var updateComVote = db.prepare("update votesComments set voteState = ? where username = ? and commentID = ?");
 var deleteComVote = db.prepare("delete from votesComments where username = ? and commentID = ?");
-var createPostVote = db.prepare("insert into votesPost values (?,?,?)");
-var updatePostVote = db.prepare("update votesPost set voteState = ? where username = ? and postID = ?");
-var deletePostVote = db.prepare("delete from votesPost where username = ? and postID = ?");
+var createPostVote = db.prepare("insert into votesPosts values (?,?,?)");
+var updatePostVote = db.prepare("update votesPosts set voteState = ? where username = ? and postID = ?");
+var deletePostVote = db.prepare("delete from votesPosts where username = ? and postID = ?");
 var retrieveComment = db.prepare("select * from comments where commentID = ?");
 var retrievePost = db.prepare("select * from posts where postID = ?");
 var updateComment = db.prepare("update comments set comUpvotes = ?,comDownvotes = ? where commentID = ?");
 var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ? where postID = ?");
-var checkVotedPost = db.prepare("select * from votesPost where postID = ? AND username = ?");
+var checkVotedPost = db.prepare("select * from votesPosts where postID = ? AND username = ?");
 var checkVotedComment = db.prepare("select * from votesComments where commentID = ? AND username = ?");
 
 var getmypost = db.prepare("select * from posts inner join users on posts.username = users.username and users.username = ? and users.persistentLogin = ? order by postTimestamp DESC limit 10");
@@ -251,6 +251,7 @@ function handle(request, response) {
         function postvoteReady() {accessDBPostVotes(store,response);}
         break;
       case '/getmyposts':
+        console.log("Received");
         var store = '';
         request.on('data', function(data)
         {
@@ -280,6 +281,7 @@ function handle(request, response) {
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
   var data = JSON.parse(store);
+  console.log(data);
   db.all("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit 10",[data.user, data.pstr], gmpostsready);
   function gmpostsready(err,row){ gmpost2(err,row,response);}
 }
@@ -287,6 +289,7 @@ function gmpready(store, response){
 function gmpost2(err,rows,response){
   if(err == null){
     if(rows != undefined){
+      console.log(rows);
       var posts='';
       for (var i=0; i < rows.length; i++){
         var filledPost = postTemplate.replace("%postTemplate%",rows[i].postTitle);

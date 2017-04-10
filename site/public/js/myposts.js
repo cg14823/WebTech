@@ -11,6 +11,7 @@ function documentready(){
 }
 
 function requestMyposts(){
+  console.log("REQUESTING");
   var datajson = JSON.stringify({user:usr, pstr:prsstring});
   $.ajax({
     type:"POST",
@@ -19,6 +20,10 @@ function requestMyposts(){
     success:loadMyposts,
     dataType: "text"
   });
+}
+
+function loadMyposts(data){
+  $("#mypost-wrap").append(data);
 }
 
 function checkPersistent(data){
