@@ -21,9 +21,11 @@ var bcrypt = require('bcryptjs');
 var randomstring = require("randomstring");
 var db = new sql.Database("memedatabase.db");
 
-var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><h3 onclick="singlePost(%POSTID%)">%POSTTITLE%</h3></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><img onclick="singlePost(%POSTID%)" class="post-image" id="post-image" src="%source%" alt="%description%"/></div><div class="row"><div onclick="votePost(%POSTID%,1)" class="col-xs-5"><div class="col-xs-2"><span id="%UPARROWID%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="votePost(%POSTID%,-1)" class="col-xs-5"><div class="col-xs-2"><span id="%DOWNARROWID%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div><div class="col-xs-2"><span class="glyphicon glyphicon-comment"></span></div></div></div>';
+var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><h3 onclick="singlePost(%POSTID%)">%POSTTITLE%</h3></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><img onclick="singlePost(%POSTID%)" class="post-image" id="post-image" src="%source%" alt="%description%"/></div><div class="row"><div onclick="votePost(%POSTID%,1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="votePost(%POSTID%,-1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div><div id="comment-image" class="col-xs-2"><span onclick="singlePost(%POSTID%)" class="glyphicon glyphicon-comment"></span></div></div></div>';
 
-var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div class="user-and-date"><span class="comment-user">%USER%</span><span class="comment-date">%DATE%</span></div><div class="comment-content">%CONTENT%</div><div class="ups-n-downs"><div class="row"><div onclick="voteComment(%COMMENTID%,1)" class="col-xs-4"><div class="col-xs-2"><span id="%UPARROWID%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-2"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="voteComment(%COMMENTID%,-1)" class="col-xs-4"><div class="col-xs-2"><span id="%DOWNARROWID%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-2"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div></div></div></div>'
+var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div class="user-and-date"><span class="comment-user">%USER%</span><span class="comment-date">%DATE%</span></div><div class="comment-content">%CONTENT%</div><div class="ups-n-downs"><div class="row"><div onclick="voteComment(%COMMENTID%,1)" class="col-xs-4"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-2"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="voteComment(%COMMENTID%,-1)" class="col-xs-4"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-2"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div></div></div></div>'
+
+var newCommentTemplate = '<div class="new-comment"><textarea id="new-comment-content" placeholder="Write your comment here..."></textarea><br></br><button type="submit" class="btn btn-default" onclick="createNewComment()">Submit</button></div>'
 
 var accountImage = '<li><a href="#" id="clickableImage"><img src="/images/account.png" alt="account icon" id ="accountIcon" onclick="account()"/></a></li>';
 
@@ -51,19 +53,21 @@ var signin_query = db.prepare("select password, salt from users where username=?
 var singlePostStatement = db.prepare("select * from posts where postID=?");
 var commentsStatement = db.prepare("select * from comments where postID = ?");
 var comVotesStatement = db.prepare("select * from votesComments where commentID = ? and username = ?");
-var postVotesStatement = db.prepare("select * from votesPosts where postID = ? and username = ?");
+var postVotesStatement = db.prepare("select * from votesPost where postID = ? and username = ?");
 
 var checkUser = db.prepare("select * from users where username = ? and persistentLogin = ?");
 var createComVote = db.prepare("insert into votesComments values (?,?,?)");
 var updateComVote = db.prepare("update votesComments set voteState = ? where username = ? and commentID = ?");
 var deleteComVote = db.prepare("delete from votesComments where username = ? and commentID = ?");
-var createPostVote = db.prepare("insert into votesPosts values (?,?,?)");
-var updatePostVote = db.prepare("update votesPosts set voteState = ? where username = ? and postID = ?");
-var deletePostVote = db.prepare("delete from votesPosts where username = ? and postID = ?");
+var createPostVote = db.prepare("insert into votesPost values (?,?,?)");
+var updatePostVote = db.prepare("update votesPost set voteState = ? where username = ? and postID = ?");
+var deletePostVote = db.prepare("delete from votesPost where username = ? and postID = ?");
 var retrieveComment = db.prepare("select * from comments where commentID = ?");
 var retrievePost = db.prepare("select * from posts where postID = ?");
 var updateComment = db.prepare("update comments set comUpvotes = ?,comDownvotes = ? where commentID = ?");
 var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ? where postID = ?");
+var checkVotedPost = db.prepare("select * from votesPost where postID = ? AND username = ?");
+var checkVotedComment = db.prepare("select * from votesComments where commentID = ? AND username = ?");
 
 var getmypost = db.prepare("select * from posts inner join users on posts.username = users.username and users.username = ? and users.persistentLogin = ? order by postTimestamp DESC limit 10");
 
@@ -87,17 +91,56 @@ function handle(request, response) {
     switch (url) {
       case '/trending':
         //load trending page
-        db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady);
+        var store = '';
+        request.on('data', function(data)
+        {
+        store += data;
+        });
+        request.on('end', function()
+        {
+          getTrendingPostsReady(store);
+        });
+        function getTrendingPostsReady(myData){
+          db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady)
+          function dbReady(err, rows){ formatPost(response,err,myData, rows); }
+        }
         break;
 
       case '/new':
         // load new page
-        db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit 10", dbReady);
+        var store = '';
+        request.on('data', function(data)
+        {
+        store += data;
+        });
+        request.on('end', function()
+        {
+          getNewPostsReady(store);
+        });
+        function getNewPostsReady(myData){
+          db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit 10", dbReady)
+          function dbReady(err, rows){ formatPost(response,err,myData, rows); }
+        }
         break;
 
       case '/top':
         //load top page
-        db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady);
+        var store = '';
+        request.on('data', function(data)
+        {
+        store += data;
+        });
+        request.on('end', function()
+        {
+          getTopPostsReady(store);
+        });
+        function getTopPostsReady(myData){
+          db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady)
+          function dbReady(err, rows){ formatPost(response,err,myData, rows); }
+        }
+        break;
+      case '/?':
+        // search
         break;
 
       case '/signup':
@@ -362,15 +405,17 @@ function upload_step3(err,fields,response){
 function accessDBPosts(data,response) {
   var incData = JSON.parse(data);
   var postID = parseInt(incData.postID);
+  var myUsername = incData.username
   singlePostStatement.get([postID],getPost);
-  function getPost(err, row){putPost(row,postID,response,err); }
+  function getPost(err, row){putPost(row,postID,myUsername,response,err); }
 }
 
 function accessDBComments(data,response) {
   var incData = JSON.parse(data);
-  postID = parseInt(incData.postID);
+  var postID = parseInt(incData.postID);
+  var username = incData.username;
   commentsStatement.all([postID], getComments);
-  function getComments(err, rows){ putComments(response,err, rows); }
+  function getComments(err, rows){ putComments(response,username,err, rows); }
 }
 
 function accessDBComVotes(data,response) {
@@ -384,17 +429,16 @@ function accessDBComVotes(data,response) {
   var change;
   checkUser.get([username,prsstring], prsCheck);
   function prsCheck(err,row){
-    //if (!(row === undefined)){
+    if (!(row === undefined)){
       console.log("SUCCESS :: " + commentID);
       retrieveComment.get([commentID],getCommentData);
-
-    /*}
+    }
     else {
       console.log("FAIL");
       console.log(row);
       console.log(prsstring);
       console.log(username);
-    }*/
+    }
   }
   function getCommentData(err,row){
     if (row === undefined) console.log(err);
@@ -467,25 +511,27 @@ function accessDBPostVotes(data,response) {
   var postUps;
   var postDowns;
   var change;
+  var postTitle;
   checkUser.get([username,prsstring], prsCheck);
   function prsCheck(err,row){
-    //if (!(row === undefined)){
+    if (!(row === undefined)){
       console.log("SUCCESS :: " + postID);
       retrievePost.get([postID],getPostData);
 
-    /*}
+    }
     else {
       console.log("FAIL");
       console.log(row);
       console.log(prsstring);
       console.log(username);
-    }*/
+    }
   }
   function getPostData(err,row){
     if (row === undefined) console.log(err);
     else {
       postUps = row.postUpvotes;
       postDowns = row.postDownvotes;
+      postTitle = row.postTitle;
       postVotesStatement.get([postID,username], getPostVotes);
     }
   }
@@ -534,7 +580,7 @@ function accessDBPostVotes(data,response) {
         }
       }
     }
-    var voteValues = {ups:postUps,downs:postDowns,postID:postID,voteState:voteState,change:change};
+    var voteValues = {ups:postUps,downs:postDowns,postID:postID,voteState:voteState,change:change,title:postTitle};
     var voteJson = JSON.stringify(voteValues);
     var typeHeader = { "Content-Type": "application/json" };
     response.writeHead(OK, typeHeader);
@@ -729,85 +775,183 @@ function deliver(response, type, err, content) {
     response.end();
 }
 
-function formatPost(response, err, rows){
+function formatPost(response, err,myData, rows){
+  var incData = JSON.parse(myData);
+  var myUsername = incData.username;
   var posts='';
-  for (var i=0; i < rows.length; i++){
-    var filledPost = postTemplate.replace("%postTemplate%",rows[i].postTitle);
-    filledPost = filledPost.replace("%POSTTITLE%",rows[i].postTitle);
-    filledPost = filledPost.replace("%source%",rows[i].imageFilename);
-    filledPost = filledPost.replace("%description%",rows[i].postTitle + '(image)');
-    var date = (new Date(rows[i].postTimestamp)).toString();
+  checkVotedPost.get([rows[0].postID,myUsername],function (err,row){
+    var voted = 0;
+    if (row === undefined) voted = 0;
+    else {
+      voted = row.voteState;
+    }
+    doOnePost(0,voted);
+  });
+  function doOnePost(index,voted){
+    var filledPost = postTemplate.replace("%postTemplate%","post"+rows[index].postID);
+    filledPost = filledPost.replace("%POSTTITLE%",rows[index].postTitle);
+    filledPost = filledPost.replace("%source%",rows[index].imageFilename);
+    filledPost = filledPost.replace("%description%",rows[index].postTitle + '(image)');
+    var date = (new Date(rows[index].postTimestamp)).toString();
     filledPost = filledPost.replace("%DATE%",date.substring(4,21));
-    filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
-    filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
-    filledPost = filledPost.replace("%USER%",rows[i].username);
-    filledPost = filledPost.replace("%POSTID%",rows[i].postID);
-    filledPost = filledPost.replace("%POSTID%",rows[i].postID);
-    filledPost = filledPost.replace("%POSTID%",rows[i].postID);
-    filledPost = filledPost.replace("%POSTID%",rows[i].postID);
-    filledPost = filledPost.replace("%UPID%","postup" + rows[i].postID);
-    filledPost = filledPost.replace("%DOWNID%","postdown" + rows[i].postID);
-    filledPost = filledPost.replace("%UPARROWID%","postuparrow" + rows[i].postID);
-    filledPost = filledPost.replace("%DOWNARROWID%","postdownarrow" + rows[i].postID);
-    filledPost = filledPost.replace("%LOADCOMMENTS%","");
+    filledPost = filledPost.replace("%UPVOTES%",rows[index].postUpvotes);
+    filledPost = filledPost.replace("%DOWNVOTES%",rows[index].postDownvotes);
+    filledPost = filledPost.replace("%USER%",rows[index].username);
+    filledPost = filledPost.replace("%POSTID%",rows[index].postID);
+    filledPost = filledPost.replace("%POSTID%",rows[index].postID);
+    filledPost = filledPost.replace("%POSTID%",rows[index].postID);
+    filledPost = filledPost.replace("%POSTID%",rows[index].postID);
+    filledPost = filledPost.replace("%POSTID%",rows[index].postID);
+    filledPost = filledPost.replace("%UPID%","postup" + rows[index].postID);
+    filledPost = filledPost.replace("%DOWNID%","postdown" + rows[index].postID);
+
+    if (voted === 0){
+      filledPost = filledPost.replace("%VOTEDUP%","not-voted-up");
+      filledPost = filledPost.replace("%VOTEDDOWN%","not-voted-down");
+    }
+    else if (voted === 1){
+      filledPost = filledPost.replace("%VOTEDUP%","voted-up");
+      filledPost = filledPost.replace("%VOTEDDOWN%","not-voted-down");
+    }
+    else{
+      filledPost = filledPost.replace("%VOTEDUP%","not-voted-up");
+      filledPost = filledPost.replace("%VOTEDDOWN%","voted-down");
+    }
     posts = posts + filledPost;
+    if (index === rows.length-1){
+      var output = {postData:posts};
+      var outputJson = JSON.stringify(output);
+      var typeHeader = { "Content-Type": "application/json" };
+      response.writeHead(OK, typeHeader);
+      response.write(outputJson);
+      response.end();
+    }
+    else{
+      checkVotedPost.get([rows[index+1].postID,myUsername],function (err,row){
+        var voted = 0;
+        if (row === undefined) voted = 0;
+        else {
+          voted = row.voteState;
+        }
+        doOnePost(index+1,voted);
+      });
+    }
   }
-  response.writeHead(OK, "text/plain");
-  response.write(posts);
-  response.end();
 }
 
-function putPost(row,postID, response, err){
+
+function putPost(row,postID,username, response, err){
   var post='';
-  var filledPost = postTemplate.replace("%postTemplate%",row.postTitle);
-  filledPost = filledPost.replace("%POSTTITLE%",row.postTitle);
-  filledPost = filledPost.replace("%source%",row.imageFilename);
-  filledPost = filledPost.replace("%description%",row.postTitle + '(image)');
-  var date = (new Date(row.postTimestamp)).toString();
-  filledPost = filledPost.replace("%DATE%",date.substring(4,24));
-  filledPost = filledPost.replace("%UPVOTES%",row.postUpvotes);
-  filledPost = filledPost.replace("%DOWNVOTES%",row.postDownvotes);
-  filledPost = filledPost.replace("%USER%",row.username);
-  filledPost = filledPost.replace("%POSTID%",row.postID);
-  filledPost = filledPost.replace("%POSTID%",row.postID);
-  filledPost = filledPost.replace("%POSTID%",row.postID);
-  filledPost = filledPost.replace("%POSTID%",row.postID);
-  filledPost = filledPost.replace("%UPID%","postup" + row.postID);
-  filledPost = filledPost.replace("%DOWNID%","postdown" + row.postID);
-  filledPost = filledPost.replace("%UPARROWID%","postuparrow" + row.postID);
-  filledPost = filledPost.replace("%DOWNARROWID%","postdownarrow" + row.postID);
-  filledPost = filledPost.replace("%LOADCOMMENTS%",'onclick="loadComments('+row.postID+')"');
-  post = post + filledPost;
-  var output = {postData:post,postID:postID};
-  var outputJson = JSON.stringify(output);
-  var typeHeader = { "Content-Type": "application/json" };
-  response.writeHead(OK, typeHeader);
-  response.write(outputJson);
-  response.end();
+  checkVotedPost.get([postID,username],function (err,row2){
+    var voted = 0;
+    if (row2 === undefined) voted = 0;
+    else {
+      voted = row2.voteState;
+    }
+    doOnePost(voted);
+  });
+  function doOnePost(voted){
+    var filledPost = postTemplate.replace("%postTemplate%","post"+row.postID);
+    filledPost = filledPost.replace("%POSTTITLE%",row.postTitle);
+    filledPost = filledPost.replace("%source%",row.imageFilename);
+    filledPost = filledPost.replace("%description%",row.postTitle + '(image)');
+    var date = (new Date(row.postTimestamp)).toString();
+    filledPost = filledPost.replace("%DATE%",date.substring(4,21));
+    filledPost = filledPost.replace("%UPVOTES%",row.postUpvotes);
+    filledPost = filledPost.replace("%DOWNVOTES%",row.postDownvotes);
+    filledPost = filledPost.replace("%USER%",row.username);
+    filledPost = filledPost.replace("%POSTID%",row.postID);
+    filledPost = filledPost.replace("%POSTID%",row.postID);
+    filledPost = filledPost.replace("%POSTID%",row.postID);
+    filledPost = filledPost.replace("%POSTID%",row.postID);
+    filledPost = filledPost.replace("%UPID%","postup" + row.postID);
+    filledPost = filledPost.replace("%DOWNID%","postdown" + row.postID);
+    if (voted === 0){
+      filledPost = filledPost.replace("%VOTEDUP%","not-voted-up");
+      filledPost = filledPost.replace("%VOTEDDOWN%","not-voted-down");
+    }
+    else if (voted === 1){
+      filledPost = filledPost.replace("%VOTEDUP%","voted-up");
+      filledPost = filledPost.replace("%VOTEDDOWN%","not-voted-down");
+    }
+    else{
+      filledPost = filledPost.replace("%VOTEDUP%","not-voted-up");
+      filledPost = filledPost.replace("%VOTEDDOWN%","voted-down");
+    }
+    post = post + filledPost;
+    var output = {postData:post,postID:postID};
+    var outputJson = JSON.stringify(output);
+    var typeHeader = { "Content-Type": "application/json" };
+    response.writeHead(OK, typeHeader);
+    response.write(outputJson);
+    response.end();
+  }
 }
 
-function putComments(response, err, rows){
+function putComments(response,username, err, rows){
   var comments='';
-  for (var i = 0;i<rows.length;i++){
-    var filledComment = commentTemplate.replace("%USER%",rows[i].username);
-    var date = (new Date(rows[i].comTimestamp)).toString();
+  if (rows.length > 0){
+    checkVotedComment.get([rows[0].commentID,username],function (err,row){
+      var voted = 0;
+      if (row === undefined) voted = 0;
+      else {
+        voted = row.voteState;
+      }
+      doOneComment(0,voted);
+    });
+  }
+  else {
+    response.writeHead(OK, "text/plain");
+    response.write("No comments to display");
+    response.end();
+  }
+  function doOneComment(index,voted){
+    var filledComment = commentTemplate.replace("%USER%",rows[index].username);
+    var date = (new Date(rows[index].comTimestamp)).toString();
     filledComment = filledComment.replace("%DATE%",date.substring(4,24));
-    filledComment = filledComment.replace("%CONTENT%",rows[i].content);
-    filledComment = filledComment.replace("%UPVOTES%",rows[i].comUpvotes);
-    filledComment = filledComment.replace("%DOWNVOTES%",rows[i].comDownvotes);
-    filledComment = filledComment.replace("%COMMENTID%",rows[i].commentID);
-    filledComment = filledComment.replace("%COMMENTID%",rows[i].commentID);
-    filledComment = filledComment.replace("%commentTemplate%",rows[i].commentID);
-    filledComment = filledComment.replace("%UPID%","comup"+rows[i].commentID);
-    filledComment = filledComment.replace("%DOWNID%","comdown"+rows[i].commentID);
-    filledComment = filledComment.replace("%UPARROWID%","comuparrow"+rows[i].commentID);
-    filledComment = filledComment.replace("%DOWNARROWID%","comdownarrow"+rows[i].commentID);
+    filledComment = filledComment.replace("%CONTENT%",rows[index].content);
+    filledComment = filledComment.replace("%UPVOTES%",rows[index].comUpvotes);
+    filledComment = filledComment.replace("%DOWNVOTES%",rows[index].comDownvotes);
+    filledComment = filledComment.replace("%COMMENTID%",rows[index].commentID);
+    filledComment = filledComment.replace("%COMMENTID%",rows[index].commentID);
+    filledComment = filledComment.replace("%commentTemplate%",rows[index].commentID);
+    filledComment = filledComment.replace("%UPID%","comup"+rows[index].commentID);
+    filledComment = filledComment.replace("%DOWNID%","comdown"+rows[index].commentID);
+    if (voted === 0){
+      filledComment = filledComment.replace("%VOTEDUP%","not-voted-up");
+      filledComment = filledComment.replace("%VOTEDDOWN%","not-voted-down");
+    }
+    else if (voted === 1){
+      filledComment = filledComment.replace("%VOTEDUP%","voted-up");
+      filledComment = filledComment.replace("%VOTEDDOWN%","not-voted-down");
+    }
+    else{
+      filledComment = filledComment.replace("%VOTEDUP%","not-voted-up");
+      filledComment = filledComment.replace("%VOTEDDOWN%","voted-down");
+    }
+
     comments = comments + filledComment;
 
+    if (index === rows.length-1){
+      comments = comments + newCommentTemplate;
+      response.writeHead(OK, "text/plain");
+      response.write(comments);
+      response.end();
+    }
+    else{
+      checkVotedComment.get([rows[index+1].commentID,username],function (err,row){
+        var voted = 0;
+        if (row === undefined) voted = 0;
+        else {
+          voted = row.voteState;
+        }
+        doOneComment(index+1,voted);
+      });
+    }
   }
-  response.writeHead(OK, "text/plain");
-  response.write(comments);
-  response.end();
+
+
+
 }
 
 

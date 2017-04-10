@@ -111,7 +111,16 @@ function checkPersistent(data){
 
 function trending(){
   //checkLogged();
-  $.get("/trending",loadPage, "text");
+
+  var data = {username: usr, prs: prsstring};
+  var datajson = JSON.stringify(data);
+  $.ajax({
+    type:"POST",
+    url:"/trending",
+    data:datajson,
+    success: loadPage,
+    dataType: "text"
+  });
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
@@ -123,7 +132,16 @@ function trending(){
 
 function newTag(){
   //checkLogged();
-  $.get("/new",loadPage, "text");
+
+  var data = {username: usr, prs: prsstring};
+  var datajson = JSON.stringify(data);
+  $.ajax({
+    type:"POST",
+    url:"/new",
+    data:datajson,
+    success: loadPage,
+    dataType: "text"
+  });
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
@@ -136,7 +154,16 @@ function newTag(){
 
 function topTag(){
   //checkLogged();
-  $.get("/top",loadPage, "text");
+
+  var data = {username: usr, prs: prsstring};
+  var datajson = JSON.stringify(data);
+  $.ajax({
+    type:"POST",
+    url:"/top",
+    data:datajson,
+    success: loadPage,
+    dataType: "text"
+  });
   $("#tabs").find(".sr-only").remove();
   $("#trendTag").removeClass();
   $("#newTag").removeClass();
@@ -158,7 +185,7 @@ function memeCreator(){
 }
 
 function singlePost(mypostID){
-  var data = {postID: mypostID};
+  var data = {postID: mypostID,username: usr, prs: prsstring};
   var datajson = JSON.stringify(data);
 
   $.ajax({
@@ -176,7 +203,7 @@ function singlePost(mypostID){
 }
 
 function loadComments(mypostID) {
-  var data = {postID: mypostID};
+  var data = {postID: mypostID,username: usr};
   var datajson = JSON.stringify(data);
   $.ajax({
     type:"POST",
@@ -192,14 +219,13 @@ function loadComments(mypostID) {
   $("#memeCreatorTag").removeClass();
 }
 
-function loadPage(data, status, xhr){
+function loadPage(data){
   //checkLogged();
-  if (status === "success"){
-    $("#post-wrap").empty();
-    $(".single-post").empty();
-    $(".the-comments").empty();
-    $("#post-wrap").append(data);
-  }
+  var incData = JSON.parse(data);
+  $("#post-wrap").empty();
+  $(".single-post").empty();
+  $(".the-comments").empty();
+  $(".post-wrap").append(incData.postData);
 }
 function writeComments(data){
   $(".the-comments").empty();
@@ -212,6 +238,7 @@ function loadSinglePage(data){
   $(".single-post").empty();
   $(".the-comments").empty();
   $(".single-post").append(incData.postData);
+  $("#comment-image").empty();
   loadComments(incData.postID);
 }
 
@@ -239,12 +266,17 @@ function votePost(mypostID,vote){
   });
 }
 
+function createNewComment(){
+  var input = $("#new-comment-content").val();
+  $(".new-comment").remove();
+  console.log(input);
+}
+
 function updateCommentVotes(data){
     var incData = JSON.parse(data);
     var ups = '#comup' + incData.comID;
     var downs = '#comdown' + incData.comID;
-    var uparrow = '#comuparrow' + incData.comID;
-    var downarrow = '#comdownarrow' + incData.comID;
+    var commentTitleID = '#'+incData.comID;
     $(ups).empty();
     $(downs).empty();
     $(ups).append(incData.ups);
@@ -252,32 +284,48 @@ function updateCommentVotes(data){
     if (incData.voteState === 1){
       switch (incData.change){
         case 'create':
-          $(uparrow).css("color","blue");
+          $(commentTitleID).find("#not-voted-up").each(function(){
+            $(this).attr("id","voted-up");
+          });
           break;
 
         case 'delete':
-          $(uparrow).css("color","black");
+          $(commentTitleID).find("#voted-up").each(function(){
+            $(this).attr("id","not-voted-up");
+          });
           break;
 
         case 'update':
-          $(uparrow).css("color","blue");
-          $(downarrow).css("color","black");
+          $(commentTitleID).find("#not-voted-up").each(function(){
+            $(this).attr("id","voted-up");
+          });
+          $(commentTitleID).find("#voted-down").each(function(){
+            $(this).attr("id","not-voted-down");
+          });
           break;
       }
     }
     else {
       switch (incData.change){
         case 'create':
-          $(downarrow).css("color","red");
+          $(commentTitleID).find("#not-voted-down").each(function(){
+            $(this).attr("id","voted-down");
+          });
           break;
 
         case 'delete':
-          $(downarrow).css("color","black");
+          $(commentTitleID).find("#voted-down").each(function(){
+            $(this).attr("id","not-voted-down");
+          });
           break;
 
         case 'update':
-          $(downarrow).css("color","red");
-          $(uparrow).css("color","black");
+          $(commentTitleID).find("#not-voted-down").each(function(){
+            $(this).attr("id","voted-down");
+          });
+          $(commentTitleID).find("#voted-up").each(function(){
+            $(this).attr("id","not-voted-up");
+          });
           break;
       }
     }
@@ -287,8 +335,7 @@ function updatePostVotes(data){
     var incData = JSON.parse(data);
     var ups = '#postup' + incData.postID;
     var downs = '#postdown' + incData.postID;
-    var uparrow = '#postuparrow' + incData.postID;
-    var downarrow = '#postdownarrow' + incData.postID;
+    var postTitleID = '#post'+incData.postID;
     $(ups).empty();
     $(downs).empty();
     $(ups).append(incData.ups);
@@ -296,32 +343,48 @@ function updatePostVotes(data){
     if (incData.voteState === 1){
       switch (incData.change){
         case 'create':
-          $(uparrow).css("color","blue");
+          $(postTitleID).find("#not-voted-up").each(function(){
+            $(this).attr("id","voted-up");
+          });
           break;
 
         case 'delete':
-          $(uparrow).css("color","black");
+          $(postTitleID).find("#voted-up").each(function(){
+            $(this).attr("id","not-voted-up");
+          });
           break;
 
         case 'update':
-          $(uparrow).css("color","blue");
-          $(downarrow).css("color","black");
+          $(postTitleID).find("#not-voted-up").each(function(){
+            $(this).attr("id","voted-up");
+          });
+          $(postTitleID).find("#voted-down").each(function(){
+            $(this).attr("id","not-voted-down");
+          });
           break;
       }
     }
     else {
       switch (incData.change){
         case 'create':
-          $(downarrow).css("color","red");
+          $(postTitleID).find("#not-voted-down").each(function(){
+            $(this).attr("id","voted-down");
+          });
           break;
 
         case 'delete':
-          $(downarrow).css("color","black");
+          $(postTitleID).find("#voted-down").each(function(){
+            $(this).attr("id","not-voted-down");
+          });
           break;
 
         case 'update':
-          $(downarrow).css("color","red");
-          $(uparrow).css("color","black");
+          $(postTitleID).find("#not-voted-down").each(function(){
+            $(this).attr("id","voted-down");
+          });
+          $(postTitleID).find("#voted-up").each(function(){
+            $(this).attr("id","not-voted-up");
+          });
           break;
       }
     }
@@ -334,7 +397,6 @@ function submitSignIn(){
   var data = {usr: username, pwd:password};
   var datajson = JSON.stringify(data);
   $("#sign-up-error").empty();
-  $('#signUp-btn').attr('disabled', true);
   $.ajax({
     type:"POST",
     url:"/signin",
@@ -380,7 +442,6 @@ function submitSignUp(){
     var data = {usr: username, mail: email, pwd:password};
     var datajson = JSON.stringify(data);
     $("#sign-up-error").empty();
-    $('#signUp-btn').attr('disabled', true);
     $.ajax({
       type:"POST",
       url:"/signup",
