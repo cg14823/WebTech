@@ -21,7 +21,7 @@ var bcrypt = require('bcryptjs');
 var randomstring = require("randomstring");
 var db = new sql.Database("memedatabase.db");
 
-var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><h3 onclick="singlePost(%POSTID%)">%POSTTITLE%</h3></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><img onclick="singlePost(%POSTID%)" class="post-image" id="post-image" src="%source%" alt="%description%"/></div><div class="row"><div onclick="votePost(%POSTID%,1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="votePost(%POSTID%,-1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div><div id="comment-image" class="col-xs-2"><span onclick="singlePost(%POSTID%)" class="glyphicon glyphicon-comment"></span></div></div></div>';
+var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><a href="\\singlepost.html?p=%POSTID%"><h3>%POSTTITLE%</h3></a></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><a href="\\singlepost.html?p=%POSTID%"><img  class="post-image" id="post-image" src="%source%" alt="%description%"/></a></div><div class="row"><div onclick="votePost(%POSTID%,1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="votePost(%POSTID%,-1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div><div id="comment-image" class="col-xs-2"><span onclick="singlePost(%POSTID%)" class="glyphicon glyphicon-comment"></span></div></div></div>';
 
 var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div class="user-and-date"><span class="comment-user">%USER%</span><span class="comment-date">%DATE%</span></div><div class="comment-content">%CONTENT%</div><div class="ups-n-downs"><div class="row"><div onclick="voteComment(%COMMENTID%,1)" class="col-xs-4"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-2"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="voteComment(%COMMENTID%,-1)" class="col-xs-4"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-2"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div></div></div></div>'
 
@@ -266,6 +266,10 @@ function handle(request, response) {
         // search
         break;
       default:
+        if (url.includes("?")){
+          var qMark = url.indexOf("?");
+          url = url.substring(0,qMark);
+        }
         if (url.endsWith("/")) url = url + "index.html";
         if (isBanned(url)) return fail(response, NotFound, "URL has been banned");
         var type = findType(url);
@@ -301,8 +305,6 @@ function gmpost2(err,rows,response){
         filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
         filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
         filledPost = filledPost.replace("%USER%",rows[i].username);
-        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
-        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
         filledPost = filledPost.replace("%POSTID%",rows[i].postID);
         filledPost = filledPost.replace("%POSTID%",rows[i].postID);
         filledPost = filledPost.replace("%UPID%","postup" + rows[i].postID);
