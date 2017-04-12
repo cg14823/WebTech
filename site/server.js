@@ -907,7 +907,7 @@ function putComments(response,username, err, rows){
   }
   else {
     response.writeHead(OK, "text/plain");
-    response.write("No comments to display");
+    response.write(newCommentTemplate);
     response.end();
   }
   function doOneComment(index,voted){
