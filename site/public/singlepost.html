@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB">
+<head>
+  <title>Memefy</title>
+  <meta charset="UTF-8"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/bootstrap.min.css"/>
+  <script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
+  <script type="text/javascript" src="js/memefy.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+</head>
+<body>
+  <nav class="navbar navbar-default">
+    <div class="container-fluid" id ="navBar">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <!-- Menu toggle button -->
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+          <!-- Message for screen readers -->
+          <span class="sr-only">Toggle navigation</span>
+          <!-- Three bars that make the button -->
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="\index.html">Memefy</a>
+      </div>
+
+
+      <div class="collapse navbar-collapse" id="navbar-collapse">
+        <!--Navigation tabs -->
+        <ul class="nav navbar-nav" id="tabs">
+          <li id="trendTag" onclick="trending()"><a href="./index.html">Trending</a></li>
+          <li id="newTag" onclick="newTag()"><a href="./index.html">New</a></li>
+          <li id="topTag" onclick="topTag()"><a href="./index.html">Top</a></li>
+          <li id="memeCreatorTag" onclick="memeCreator()"><a href="">Meme Creator</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right" id ="account-or-signIn">
+          <li id="signin-list-el"><button type="button" id="signin-btn" class="btn btn-primary" data-toggle="modal" data-target="#signin-modal">Sign In</button></li>
+          <li id="account-list-el">
+            <div class="btn-group" id="account-btn">
+              <button type="button"  class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Account
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a href="#">Upvoted</a></li>
+                <li><a href="\myposts.html">My posts</a></li>
+                <li><a href="#">Account</a></li>
+                <li role="separator" class="divider"></li>
+                <li onclick="signout()"><a href="#">Sign out</a></li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right" >
+          <li id ="upload">
+            <a id="ref-wrap" href ="\upload.html"><button type="button" id ="upload-button" class="btn btn-default">upload</button></a>
+          </li>
+        </ul>
+        <form class="navbar-form navbar-right">
+
+          <span class="search-form">
+            <input type="text" class="form-control" id="searchInput" placeholder="Search"/>
+          </span>
+          <span class="search-button">
+            <button type="submit" class="btn btn-default" onclick="upload()">Search</button>
+          </span>
+
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="single-post">
+    </div>
+    <div class="the-comments">
+    </div>
+  </div>
+
+  <script>
+  //Get the postID and load the post
+  var params = window.location.search;
+  var postID = params.substring(params.indexOf("=")+1);
+  singlePost(postID);
+  </script>
+
+ <!-- SIGN IN MODAL -->
+  <div class="modal fade" id="signin-modal" tabindex="-1" role="log in or sign up" aria-labelledby="sign in ">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+        <h4 class="modal-title" id="modalTitle">Sign up or Log in</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6" id="separator-line">
+            <div class="row">
+              <div class="bTitle">Sign in</div>
+            </div>
+            <div class="row">
+              <div class="error-box" id="sign-in-error">
+              </div>
+            </div>
+            <div class="row">
+              <form class="form-horizontal">
+                <div class ="form-group">
+                  <div class="col-sm-3">
+                    <label for="input-usr" class="f-lbl">Username</label>
+                  </div>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" id="input-usr" placeholder="Username"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-3">
+                    <label for="input-password" class="f-lbl">Password</label>
+                  </div>
+                  <div class="col-sm-8">
+                    <input type="password" class="form-control" id="input-password" placeholder="Password"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-offset-3 col-sm-10">
+                    <button type="button" onclick="submitSignIn()" class="btn btn-default">Sign in</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="row">
+              <div class="bTitle">Sign Up</div>
+            </div>
+            <div class="row">
+              <div class="error-box" id="sign-up-error">
+
+              </div>
+            </div>
+            <div class="row">
+              <form class="form-horizontal">
+                <div class ="form-group">
+                  <div class="col-sm-3">
+                    <label for="input-username" class="f-lbl">Username</label>
+                  </div>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" id="input-username" placeholder="Username"/>
+                  </div>
+                </div>
+                <div class ="form-group">
+                  <div class="col-sm-3">
+                    <label for="input-email1" class="f-lbl">Email</label>
+                  </div>
+                  <div class="col-sm-8">
+                    <input type="email" class="form-control" id="input-email1" placeholder="Email"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-3">
+                    <label for="input-password1" class="f-lbl">Password</label>
+                  </div>
+                  <div class="col-sm-8">
+                    <input type="password" class="form-control" id="input-password1" placeholder="Password"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-offset-3 col-sm-10">
+                    <button type="button" onclick="submitSignUp()" class="btn btn-default" id="signUp-btn">Sign Up</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

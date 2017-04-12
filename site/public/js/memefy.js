@@ -223,8 +223,6 @@ function loadPage(data){
   //checkLogged();
   var incData = JSON.parse(data);
   $("#post-wrap").empty();
-  $(".single-post").empty();
-  $(".the-comments").empty();
   $(".post-wrap").append(incData.postData);
 }
 function writeComments(data){
