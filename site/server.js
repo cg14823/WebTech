@@ -36,6 +36,13 @@ var types, banned;
 start(8080);
 
 
+/* TODO::
+  --------------Isue list--------------------------------
+  - SERVER ALOWS ME TO UPVOTE IDEFENETLY
+  - Poor responsiveness in navbar when in mobile
+
+*/
+
 // QUERIES PREPARED STATEMENTS
 var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt) values ( ?, ?, ?, ?)");
 var uniqueUserName = db.prepare("select username from users where username=?");
@@ -46,21 +53,23 @@ var signin_query = db.prepare("select password, salt from users where username=?
 var singlePostStatement = db.prepare("select * from posts where postID=?");
 var commentsStatement = db.prepare("select * from comments where postID = ?");
 var comVotesStatement = db.prepare("select * from votesComments where commentID = ? and username = ?");
-var postVotesStatement = db.prepare("select * from votesPost where postID = ? and username = ?");
+var postVotesStatement = db.prepare("select * from votesPosts where postID = ? and username = ?");
 
 var checkUser = db.prepare("select * from users where username = ? and persistentLogin = ?");
 var createComVote = db.prepare("insert into votesComments values (?,?,?)");
 var updateComVote = db.prepare("update votesComments set voteState = ? where username = ? and commentID = ?");
 var deleteComVote = db.prepare("delete from votesComments where username = ? and commentID = ?");
-var createPostVote = db.prepare("insert into votesPost values (?,?,?)");
-var updatePostVote = db.prepare("update votesPost set voteState = ? where username = ? and postID = ?");
-var deletePostVote = db.prepare("delete from votesPost where username = ? and postID = ?");
+var createPostVote = db.prepare("insert into votesPosts values (?,?,?)");
+var updatePostVote = db.prepare("update votesPosts set voteState = ? where username = ? and postID = ?");
+var deletePostVote = db.prepare("delete from votesPosts where username = ? and postID = ?");
 var retrieveComment = db.prepare("select * from comments where commentID = ?");
 var retrievePost = db.prepare("select * from posts where postID = ?");
 var updateComment = db.prepare("update comments set comUpvotes = ?,comDownvotes = ? where commentID = ?");
 var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ? where postID = ?");
-var checkVotedPost = db.prepare("select * from votesPost where postID = ? AND username = ?");
+var checkVotedPost = db.prepare("select * from votesPosts where postID = ? AND username = ?");
 var checkVotedComment = db.prepare("select * from votesComments where commentID = ? AND username = ?");
+
+var getmypost = db.prepare("select * from posts inner join users on posts.username = users.username and users.username = ? and users.persistentLogin = ? order by postTimestamp DESC limit 10");
 
 var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp) values (?, ?, ?, ?)");
 // Start the http service.  Accept only requests from localhost, for security.
@@ -78,6 +87,7 @@ function start(port) {
 // Serve a request by delivering a file.
 function handle(request, response) {
     var url = request.url.toLowerCase();
+    function dbReady(err, rows){ formatPost(response,err, rows); }
     switch (url) {
       case '/trending':
         //load trending page
@@ -132,7 +142,9 @@ function handle(request, response) {
       case '/?':
         // search
         break;
+
       case '/signup':
+        //does signup maybe change to use formidable????
         var store = '';
         request.on('data', function(data)
         {
@@ -144,7 +156,9 @@ function handle(request, response) {
         });
         function signUpF (data) { sign_up(data,response);}
         break;
+
       case '/signin':
+        //does sigin maybe change to use formidable????
         var store = '';
         request.on('data', function(data)
         {
@@ -156,7 +170,18 @@ function handle(request, response) {
         });
         function signInF (data) { sign_in(data,response);}
         break;
-      case '/home':
+
+      case '/persignin':
+        var store = '';
+        request.on('data', function(data)
+        {
+          store += data;
+        });
+        request.on('end', function()
+        {
+          persReady(store, response);
+        });
+
         break;
 
       case '/singlepost':
@@ -173,9 +198,10 @@ function handle(request, response) {
         break;
 
       case '/upload':
+        //upload requested use formidable to deal with input data
         var form = new formidable.IncomingForm();
-        console.log("FORM");
         form.uploadDir =__dirname+"/public/memes"
+        form.on('error', function(err) { submitionError(12,response)});
         form.parse(request, uploadReady);
         form.keepExtensions = true;
         function uploadReady(err, fields, files) { upload_step1(err, fields, files,response);}
@@ -224,7 +250,21 @@ function handle(request, response) {
         });
         function postvoteReady() {accessDBPostVotes(store,response);}
         break;
-
+      case '/getmyposts':
+        console.log("Received");
+        var store = '';
+        request.on('data', function(data)
+        {
+          store += data;
+        });
+        request.on('end', function()
+        {
+          gmpready(store, response);
+        });
+        break;
+      case '/?':
+        // search
+        break;
       default:
         if (url.endsWith("/")) url = url + "index.html";
         if (isBanned(url)) return fail(response, NotFound, "URL has been banned");
@@ -237,11 +277,94 @@ function handle(request, response) {
     }
 }
 
+
+// --Load my posts-----------------------------------------
+function gmpready(store, response){
+  var data = JSON.parse(store);
+  console.log(data);
+  db.all("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit 10",[data.user, data.pstr], gmpostsready);
+  function gmpostsready(err,row){ gmpost2(err,row,response);}
+}
+
+function gmpost2(err,rows,response){
+  if(err == null){
+    if(rows != undefined){
+      console.log(rows);
+      var posts='';
+      for (var i=0; i < rows.length; i++){
+        var filledPost = postTemplate.replace("%postTemplate%",rows[i].postTitle);
+        filledPost = filledPost.replace("%POSTTITLE%",rows[i].postTitle);
+        filledPost = filledPost.replace("%source%",rows[i].imageFilename);
+        filledPost = filledPost.replace("%description%",rows[i].postTitle + '(image)');
+        var date = (new Date(rows[i].postTimestamp)).toString();
+        filledPost = filledPost.replace("%DATE%",date.substring(4,21));
+        filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
+        filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
+        filledPost = filledPost.replace("%USER%",rows[i].username);
+        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
+        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
+        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
+        filledPost = filledPost.replace("%POSTID%",rows[i].postID);
+        filledPost = filledPost.replace("%UPID%","postup" + rows[i].postID);
+        filledPost = filledPost.replace("%DOWNID%","postdown" + rows[i].postID);
+        filledPost = filledPost.replace("%UPARROWID%","postuparrow" + rows[i].postID);
+        filledPost = filledPost.replace("%DOWNARROWID%","postdownarrow" + rows[i].postID);
+        filledPost = filledPost.replace("%LOADCOMMENTS%",'onclick="loadComments('+rows[i].postID+')"');
+        posts = posts + filledPost;
+      }
+      textResponse(posts,response);
+    }
+    else{
+      textResponse('<p>You have no posts :(</p>',response);
+    }
+  }
+  else{
+    textResponse('<p>Could not access database soyry.</p>',response);
+  }
+}
+
+function textResponse(data,response){
+  var typeHeader = { "Content-Type": "text/plain" };
+  response.writeHead(OK, typeHeader);
+  response.write(data);
+  response.end();
+}
+
+
+
+
+// LOAD my posts end --------------------------------
+// persistentLogin check
+function persReady(store, response){
+  var userData = JSON.parse(store);
+  checkUser.get([userData.usr,userData.per],checkUserReady);
+  function checkUserReady(err,row){ check_user_pers(err,row,userData,response);}
+}
+
+function check_user_pers(err,row,data,response){
+  if(err === null && row != undefined){
+    if(row.persistentLogin === data.per){
+      validSignUp(response,err,data.usr);
+    }
+    else{
+      submitionError(9,response);
+    }
+  }
+  else{
+    submitionError(1,response);
+  }
+}
+
+
+/// END pers login check
+// -------------------------------------- UPLOAD CODE -------------------------
+
 function upload_step1(err, fields, files,response){
-  console.log(err);
   if (err === null){
-    console.log(fields.user);
-    console.log(fields.pstr);
+    if(fields.title.length > 40){
+      submitionError(12,response);
+      return;
+    }
     checkUser.get([fields.user,fields.pstr],checkUserReady);
     function checkUserReady(err,row){ check_user_step1(err,row,fields, files,response);}
   }
@@ -251,9 +374,6 @@ function upload_step1(err, fields, files,response){
 }
 
 function check_user_step1(err,row,fields, files,response){
-  console.log("check user");
-  console.log(err);
-  console.log(row);
   if(err === null && row != undefined){
     if(row.persistentLogin === fields.pstr){
       upload_step2(fields, files,response);
@@ -282,6 +402,8 @@ function upload_step3(err,fields,response){
     submitionError(1,response);
   }
 }
+
+//---------------------- UPLOAD END-------------------------------------------//
 
 function accessDBPosts(data,response) {
   var incData = JSON.parse(data);
@@ -487,7 +609,7 @@ function sign_in(store, response){
 function singIn_step2(err, row, data, response){
   if(err === null){
     if(row != undefined){
-      console.log("hashing password");
+      //console.log("hashing password");
       var salt = row.salt;
       var dbhash = row.password;
       bcrypt.hash(data.pwd, salt,hashready);
@@ -592,6 +714,7 @@ function submitSignUp(response, data, result, salt){
 
 function validSignUp(response, err, usr){
   if (err === null){
+    console.log("creating pers");
     var persLog = randomstring.generate({charset: 'alphanumeric'})
     addpers.run([persLog,usr], ready);
     function ready(err){signupprocessfinished(response, err, persLog, usr);}

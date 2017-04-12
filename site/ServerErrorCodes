@@ -11,6 +11,8 @@ ERROR CODES:
 008 :- Password does not match
 009 :- user or pstr could not be verified
 010 :- upload fail
+012 :- Data sent more than 2mb
+013 :- upload title exceeds 40 characters
 
 
 Account VALID:

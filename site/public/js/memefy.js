@@ -3,6 +3,14 @@
 var usr = null;
 var prsstring = null;
 
+function documentready(){
+  $('#account-list-el').hide();
+  checkLogged();
+  if($("#post-wrap").is(":empty")){
+    trending();
+  }
+}
+
 function uploadSubmit (){
   if( usr === null || prsstring === null){
     alert("You must be signed in to upload");
@@ -12,7 +20,15 @@ function uploadSubmit (){
     var fname = $("#post-file-input").val();
     var tl = $("#post-title-input").val();
     var ds = $("#post-description-input").val();
-    console.log( $('#post-file-input')[0].files[0]);
+    if (tl.length > 40){
+      alert("title can only be 40 characters long");
+      return;
+    }
+    if($('#post-file-input')[0].files[0].size / 1024 > 1000){
+      alert("Image can only be 1mB");
+      return
+    }
+
     var formData = new FormData();
     formData.append('title',tl);
     formData.append('description',ds);
@@ -20,7 +36,7 @@ function uploadSubmit (){
     formData.append('user',usr);
     formData.append('pstr',prsstring);
     formData.append('image', $('#post-file-input')[0].files[0]);
-    console.log(formData);
+
 
     $.ajax({
       url: "/upload",
@@ -35,21 +51,34 @@ function uploadSubmit (){
   }
 }
 
+
 function uploadSuccess(data){
-  alert(data.error_code);
+  switch (data.error_code) {
+    case 0:
+      alert("Your meme was uploaded.");
+      break;
+    default:
+      alert("Sorry our servers can not deal with your meme powers :(");
+      break;
+  }
 }
 
 function checkLogged(){
+  console.log("CHECKING...");
   if( usr === null || prsstring === null){
     var usrCookie = readCookie("username");
     var pstr = readCookie("pstr");
     if(usrCookie != "" && pstr != ""){
-      /* TODO: send data to verify to server, if valid give new pstr if invalid log of*/
-      usr = usrCookie;
-      prsstring = pstr;
-      $('#signin-list-el').hide();
-      $('#account-list-el').show();
-      $('#upload-button').prop('disabled', false);
+      console.log("Checking user");
+      var data ={usr:usrCookie, per: pstr};
+      var datajson = JSON.stringify(data);
+      $.ajax({
+        type:"POST",
+        url:"/persignin",
+        data:datajson,
+        success:checkPersistent,
+        dataType: "json"
+      });
     }
     else{
       $('#account-list-el').hide();
@@ -58,11 +87,28 @@ function checkLogged(){
     }
   }
   else{
+    console.log("NO USER");
     $('#signin-list-el').hide();
     $('#account-list-el').show();
     $('#upload-button').prop('disabled', false);
   }
 }
+
+function checkPersistent(data){
+  if(data.error_code==0){
+    usr = data.usr;
+    prsstring = data.pers;
+    var pstrcookie ="pstr=" +prsstring+";"
+    document.cookie = pstrcookie;
+    $('#signin-list-el').hide();
+    $('#account-list-el').show();
+    $('#upload-button').prop('disabled', false);
+  }
+  else{
+    alert("not valid pers");
+  }
+}
+
 function trending(){
   //checkLogged();
 
@@ -176,7 +222,7 @@ function loadComments(mypostID) {
 function loadPage(data){
   //checkLogged();
   var incData = JSON.parse(data);
-  $(".post-wrap").empty();
+  $("#post-wrap").empty();
   $(".single-post").empty();
   $(".the-comments").empty();
   $(".post-wrap").append(incData.postData);
@@ -188,7 +234,7 @@ function writeComments(data){
 
 function loadSinglePage(data){
   var incData = JSON.parse(data);
-  $(".post-wrap").empty();
+  $("#post-wrap").empty();
   $(".single-post").empty();
   $(".the-comments").empty();
   $(".single-post").append(incData.postData);
@@ -469,13 +515,6 @@ function displayErrorSignUp(message, errorBox){
       break
   }
 
-}
-
-function documentready(){
-  checkLogged();
-  if($("#post-wrap").is(":empty")){
-    trending();
-  }
 }
 
 function readCookie(name) {
