@@ -241,27 +241,31 @@ function loadSinglePage(data){
 }
 
 function voteComment(mycommentID,vote){
-  var data = {commentID: mycommentID,voteState: vote,username: usr, prs: prsstring};
-  var datajson = JSON.stringify(data);
-  $.ajax({
-    type:"POST",
-    url:"/commentvote",
-    data:datajson,
-    success: updateCommentVotes,
-    dataType: "text"
-  });
+  if (usr != null && prsstring != null){
+    var data = {commentID: mycommentID,voteState: vote,username: usr, prs: prsstring};
+    var datajson = JSON.stringify(data);
+    $.ajax({
+      type:"POST",
+      url:"/commentvote",
+      data:datajson,
+      success: updateCommentVotes,
+      dataType: "text"
+    });
+  }
 }
 
 function votePost(mypostID,vote){
-  var data = {postID: mypostID,voteState: vote,username: usr, prs: prsstring};
-  var datajson = JSON.stringify(data);
-  $.ajax({
-    type:"POST",
-    url:"/postvote",
-    data:datajson,
-    success: updatePostVotes,
-    dataType: "text"
-  });
+  if (usr != null && prsstring != null){
+    var data = {postID: mypostID,voteState: vote,username: usr, prs: prsstring};
+    var datajson = JSON.stringify(data);
+    $.ajax({
+      type:"POST",
+      url:"/postvote",
+      data:datajson,
+      success: updatePostVotes,
+      dataType: "text"
+    });
+  }
 }
 
 function createNewComment(){
