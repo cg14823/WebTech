@@ -36,9 +36,9 @@ function checkPersistent(data){
     $('#account-list-el').show();
     $('#upload-button').prop('disabled', false);
     if($("#mypost-wrap").is(":empty")){
-      requestMyposts();
       $("#no-posts").empty();
     }
+    requestMyposts();
   }
   else{
     alert("Your memes are to good for our database, please try later");
@@ -204,6 +204,79 @@ function displayErrorSignUp(message, errorBox){
       break
   }
 
+}
+
+function votePost(mypostID,vote){
+  if (usr != null && prsstring != null){
+    var data = {postID: mypostID,voteState: vote,username: usr, prs: prsstring};
+    var datajson = JSON.stringify(data);
+    $.ajax({
+      type:"POST",
+      url:"/postvote",
+      data:datajson,
+      success: updatePostVotes,
+      dataType: "text"
+    });
+  }
+}
+
+function updateCommentVotes(data){
+    var incData = JSON.parse(data);
+    var ups = '#comup' + incData.comID;
+    var downs = '#comdown' + incData.comID;
+    var commentTitleID = '#'+incData.comID;
+    $(ups).empty();
+    $(downs).empty();
+    $(ups).append(incData.ups);
+    $(downs).append(incData.downs);
+    if (incData.voteState === 1){
+      switch (incData.change){
+        case 'create':
+          $(commentTitleID).find("#not-voted-up").each(function(){
+            $(this).attr("id","voted-up");
+          });
+          break;
+
+        case 'delete':
+          $(commentTitleID).find("#voted-up").each(function(){
+            $(this).attr("id","not-voted-up");
+          });
+          break;
+
+        case 'update':
+          $(commentTitleID).find("#not-voted-up").each(function(){
+            $(this).attr("id","voted-up");
+          });
+          $(commentTitleID).find("#voted-down").each(function(){
+            $(this).attr("id","not-voted-down");
+          });
+          break;
+      }
+    }
+    else {
+      switch (incData.change){
+        case 'create':
+          $(commentTitleID).find("#not-voted-down").each(function(){
+            $(this).attr("id","voted-down");
+          });
+          break;
+
+        case 'delete':
+          $(commentTitleID).find("#voted-down").each(function(){
+            $(this).attr("id","not-voted-down");
+          });
+          break;
+
+        case 'update':
+          $(commentTitleID).find("#not-voted-down").each(function(){
+            $(this).attr("id","voted-down");
+          });
+          $(commentTitleID).find("#voted-up").each(function(){
+            $(this).attr("id","not-voted-up");
+          });
+          break;
+      }
+    }
 }
 
 function readCookie(name) {

@@ -104,9 +104,6 @@ function checkPersistent(data){
     $('#account-list-el').show();
     $('#upload-button').prop('disabled', false);
   }
-  else{
-    alert("not valid pers");
-  }
 }
 
 function trending(){

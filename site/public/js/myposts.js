@@ -103,6 +103,80 @@ function signout(){
   checkLogged();
 }
 
+function votePost(mypostID,vote){
+  if (usr != null && prsstring != null){
+    var data = {postID: mypostID,voteState: vote,username: usr, prs: prsstring};
+    var datajson = JSON.stringify(data);
+    $.ajax({
+      type:"POST",
+      url:"/postvote",
+      data:datajson,
+      success: updatePostVotes,
+      dataType: "text"
+    });
+  }
+}
+
+
+function updatePostVotes(data){
+    var incData = JSON.parse(data);
+    var ups = '#postup' + incData.postID;
+    var downs = '#postdown' + incData.postID;
+    var postTitleID = '#post'+incData.postID;
+    $(ups).empty();
+    $(downs).empty();
+    $(ups).append(incData.ups);
+    $(downs).append(incData.downs);
+    if (incData.voteState === 1){
+      switch (incData.change){
+        case 'create':
+          $(postTitleID).find("#not-voted-up").each(function(){
+            $(this).attr("id","voted-up");
+          });
+          break;
+
+        case 'delete':
+          $(postTitleID).find("#voted-up").each(function(){
+            $(this).attr("id","not-voted-up");
+          });
+          break;
+
+        case 'update':
+          $(postTitleID).find("#not-voted-up").each(function(){
+            $(this).attr("id","voted-up");
+          });
+          $(postTitleID).find("#voted-down").each(function(){
+            $(this).attr("id","not-voted-down");
+          });
+          break;
+      }
+    }
+    else {
+      switch (incData.change){
+        case 'create':
+          $(postTitleID).find("#not-voted-down").each(function(){
+            $(this).attr("id","voted-down");
+          });
+          break;
+
+        case 'delete':
+          $(postTitleID).find("#voted-down").each(function(){
+            $(this).attr("id","not-voted-down");
+          });
+          break;
+
+        case 'update':
+          $(postTitleID).find("#not-voted-down").each(function(){
+            $(this).attr("id","voted-down");
+          });
+          $(postTitleID).find("#voted-up").each(function(){
+            $(this).attr("id","not-voted-up");
+          });
+          break;
+      }
+    }
+}
+
 function submitSignUp(){
   var username = $("#input-username").val();
   var email = $("#input-email1").val();
