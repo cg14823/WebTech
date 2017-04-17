@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet"/>
   <link rel="stylesheet" href="css/bootstrap.min.css"/>
   <script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
-  <script type="text/javascript" src="js/memefy.js"></script>
+  <script type="text/javascript" src="js/myupvoteposts.js"></script>
   <script type="text/javascript" src="js/bootstrap.min.js"></script>
 </head>
 <body>
@@ -30,12 +30,7 @@
 
       <div class="collapse navbar-collapse" id="navbar-collapse">
         <!--Navigation tabs -->
-        <ul class="nav navbar-nav" id="tabs">
-          <li id="trendTag" onclick="trending()"><a href="./index.html">Trending</a></li>
-          <li id="newTag" onclick="newTag()"><a href="./index.html">New</a></li>
-          <li id="topTag" onclick="topTag()"><a href="./index.html">Top</a></li>
-          <li id="memeCreatorTag" onclick="memeCreator()"><a href="">Meme Creator</a></li>
-        </ul>
+
         <ul class="nav navbar-nav navbar-right" id ="account-or-signIn">
           <li id="signin-list-el"><button type="button" id="signin-btn" class="btn btn-primary" data-toggle="modal" data-target="#signin-modal">Sign In</button></li>
           <li id="account-list-el">
@@ -49,45 +44,17 @@
                 <li><a href="\myposts.html">My posts</a></li>
                 <li><a href="#">Account</a></li>
                 <li role="separator" class="divider"></li>
-                <li onclick="signout()"><a href="#">Sign out</a></li>
+                <li onclick="signout()"><a href="\index.html">Sign out</a></li>
               </ul>
             </div>
           </li>
         </ul>
-
-        <ul class="nav navbar-nav navbar-right" >
-          <li id ="upload">
-            <a id="ref-wrap" href ="\upload.html"><button type="button" id ="upload-button" class="btn btn-default">upload</button></a>
-          </li>
-        </ul>
-        <form class="navbar-form navbar-right">
-
-          <span class="search-form">
-            <input type="text" class="form-control" id="searchInput" placeholder="Search"/>
-          </span>
-          <span class="search-button">
-            <button type="submit" class="btn btn-default" onclick="upload()">Search</button>
-          </span>
-
-        </form>
       </div>
     </div>
   </nav>
-
-  <div class="container">
-    <div class="single-post">
-    </div>
-    <div class="the-comments">
-    </div>
-  </div>
-
-  <script>
-  //Get the postID and load the post
-  var params = window.location.search;
-  var postID = params.substring(params.indexOf("=")+1);
-  singlePost(postID);
-  </script>
-
+  <div class="post-wrap" id="no-posts"></div>
+  <div class="post-wrap" id ="mypost-wrap"></div>
+  <div class="loader"></div>
  <!-- SIGN IN MODAL -->
   <div class="modal fade" id="signin-modal" tabindex="-1" role="log in or sign up" aria-labelledby="sign in ">
   <div class="modal-dialog modal-lg" role="document">
@@ -104,6 +71,7 @@
             </div>
             <div class="row">
               <div class="error-box" id="sign-in-error">
+
               </div>
             </div>
             <div class="row">

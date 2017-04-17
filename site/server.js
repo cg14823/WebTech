@@ -69,7 +69,8 @@ var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ? 
 var checkVotedPost = db.prepare("select * from votesPosts where postID = ? AND username = ?");
 var checkVotedComment = db.prepare("select * from votesComments where commentID = ? AND username = ?");
 
-var getmypost = db.prepare("select * from posts inner join users on posts.username = users.username and users.username = ? and users.persistentLogin = ? order by postTimestamp DESC limit 10");
+var getmypost = db.prepare("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit 10");
+var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit 10");
 
 var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp) values (?, ?, ?, ?)");
 // Start the http service.  Accept only requests from localhost, for security.
@@ -233,9 +234,8 @@ function handle(request, response) {
         });
         request.on('end', function()
         {
-          comvoteReady();
+          accessDBComVotes(store,response);
         });
-        function comvoteReady() {accessDBComVotes(store,response);}
         break;
 
       case '/postvote':
@@ -246,9 +246,8 @@ function handle(request, response) {
         });
         request.on('end', function()
         {
-          postvoteReady();
+          accessDBPostVotes(store,response);
         });
-        function postvoteReady() {accessDBPostVotes(store,response);}
         break;
       case '/getmyposts':
         console.log("Received");
@@ -262,6 +261,18 @@ function handle(request, response) {
           gmpready(store, response);
         });
         break;
+        case '/getmyupvoteposts':
+          console.log("Received");
+          var store = '';
+          request.on('data', function(data)
+          {
+            store += data;
+          });
+          request.on('end', function()
+          {
+            gmupready(store, response);
+          });
+          break;
       case '/?':
         // search
         break;
@@ -286,8 +297,14 @@ function handle(request, response) {
 function gmpready(store, response){
   var data = JSON.parse(store);
   console.log(data);
-  db.all("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit 10",[data.user, data.pstr], gmpostsready);
+  getmypost.all([data.user, data.pstr], gmpostsready);
   function gmpostsready(err,row){ gmpost2(err,row,response);}
+}
+
+function gmupready(store, response){
+  var data = JSON.parse(store);
+  getmyupost.all([data.user],gmupostsready);
+  function gmupostsready(err,row){ gmpost2(err,row,response);}
 }
 
 function gmpost2(err,rows,response){
@@ -314,6 +331,9 @@ function gmpost2(err,rows,response){
         filledPost = filledPost.replace("%LOADCOMMENTS%",'onclick="loadComments('+rows[i].postID+')"');
         posts = posts + filledPost;
       }
+      if(posts===''){
+        textResponse('<p>You have no posts :(</p>',response);
+      }
       textResponse(posts,response);
     }
     else{
@@ -321,7 +341,7 @@ function gmpost2(err,rows,response){
     }
   }
   else{
-    textResponse('<p>Could not access database soyry.</p>',response);
+    textResponse('<p>Could not access database sorry.</p>',response);
   }
 }
 
@@ -519,10 +539,9 @@ function accessDBPostVotes(data,response) {
   var postTitle;
   checkUser.get([username,prsstring], prsCheck);
   function prsCheck(err,row){
-    if (!(row === undefined)){
+    if (row != undefined){
       console.log("SUCCESS :: " + postID);
       retrievePost.get([postID],getPostData);
-
     }
     else {
       console.log("FAIL");
