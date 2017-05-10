@@ -21,7 +21,7 @@ var bcrypt = require('bcryptjs');
 var randomstring = require("randomstring");
 var db = new sql.Database("memedatabase.db");
 
-var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><a href="\\singlepost.html?p=%POSTID%"><h3>%POSTTITLE%</h3></a></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><a href="\\singlepost.html?p=%POSTID%"><img  class="post-image" id="post-image" src="%source%" alt="%description%"/></a></div><div class="row"><div onclick="votePost(%POSTID%,1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="votePost(%POSTID%,-1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div><div id="comment-image" class="col-xs-2"><span onclick="singlePost(%POSTID%)" class="glyphicon glyphicon-comment"></span></div></div></div>';
+var postTemplate ='<div class="post" id="%postTemplate%"><div class="row"><a href="\\singlepost.html?p=%POSTID%"><h3>%POSTTITLE%</h3></a></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><a href="\\singlepost.html?p=%POSTID%"><img  class="post-image" id="post-image" src="%source%" alt="%description%"/></a></div><div class="row"><div onclick="votePost(%POSTID%,1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-10"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="votePost(%POSTID%,-1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-10"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div><a href="\\singlepost.html?p=%POSTID%"><div id="comment-image" class="col-xs-2"><span class="glyphicon glyphicon-comment"></span></div></a></div></div>';
 
 var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div class="user-and-date"><span class="comment-user">%USER%</span><span class="comment-date">%DATE%</span></div><div class="comment-content">%CONTENT%</div><div class="ups-n-downs"><div class="row"><div onclick="voteComment(%COMMENTID%,1)" class="col-xs-4"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-2"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="voteComment(%COMMENTID%,-1)" class="col-xs-4"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-2"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div></div></div></div>'
 
@@ -52,7 +52,7 @@ var addpers = db.prepare("update users set persistentlogin=? where username=?");
 var signin_query = db.prepare("select password, salt from users where username=?");
 
 var singlePostStatement = db.prepare("select * from posts where postID=?");
-var commentsStatement = db.prepare("select * from comments where postID = ?");
+var commentsStatement = db.prepare("select * from comments where postID = ? order by comUpvotes desc");
 var comVotesStatement = db.prepare("select * from votesComments where commentID = ? and username = ?");
 var postVotesStatement = db.prepare("select * from votesPosts where postID = ? and username = ?");
 
@@ -74,6 +74,8 @@ var getmypost = db.prepare("select * from users inner join posts on users.userna
 var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit 10");
 
 var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp) values (?, ?, ?, ?)");
+
+var createCommentStatement = db.prepare("insert into comments (postID, username, comTimestamp, content) values (?, ?, ?, ?)");
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
     types = defineTypes();
@@ -285,6 +287,18 @@ function handle(request, response) {
             gmupready(store, response);
           });
           break;
+        case '/createcomment':
+          console.log("Received");
+          var store = '';
+          request.on('data', function(data)
+          {
+            store += data;
+          });
+          request.on('end', function()
+          {
+            createCommentReady(store, response);
+          });
+          break;
       case '/?':
         // search
         break;
@@ -304,6 +318,54 @@ function handle(request, response) {
     }
 }
 
+// --Create Comment
+function createCommentReady(store,response){
+  var data = JSON.parse(store);
+  var username = data.username;
+  var prsstring = data.prs;
+  checkUser.get([username,prsstring], prsCheck);
+  function prsCheck(err,row){
+    if (!(row === undefined)){
+      var myTimestamp = Date.now();
+      createCommentStatement.get([data.postID,username,myTimestamp,data.content],insertComment);
+    }
+    else {
+      console.log("Not Logged In");
+    }
+  }
+  function insertComment(err){getCommentID(err,response);}
+}
+
+function getCommentID(err,response){
+  db.get("SELECT last_insert_rowid()",useCommentID);
+  function useCommentID(err,row){addCommentStart(err,row,response);}
+}
+
+function addCommentStart(err,row,response){
+  db.get("SELECT * FROM comments where commentID=?",row['last_insert_rowid()'],addCommentToP);
+  function addCommentToP(err,row){addCommentToPage(err,row,response);}
+}
+
+function addCommentToPage(err,row,response){
+  var comments = '';
+  var filledComment = commentTemplate.replace("%USER%",row.username);
+  var date = (new Date(row.comTimestamp)).toString();
+  filledComment = filledComment.replace("%DATE%",date.substring(4,24));
+  filledComment = filledComment.replace("%CONTENT%",row.content);
+  filledComment = filledComment.replace("%UPVOTES%",row.comUpvotes);
+  filledComment = filledComment.replace("%DOWNVOTES%",row.comDownvotes);
+  filledComment = filledComment.replace("%COMMENTID%",row.commentID);
+  filledComment = filledComment.replace("%COMMENTID%",row.commentID);
+  filledComment = filledComment.replace("%commentTemplate%",row.commentID);
+  filledComment = filledComment.replace("%UPID%","comup"+row.commentID);
+  filledComment = filledComment.replace("%DOWNID%","comdown"+row.commentID);
+  filledComment = filledComment.replace("%VOTEDUP%","not-voted-up");
+  filledComment = filledComment.replace("%VOTEDDOWN%","not-voted-down");
+  comments = comments + filledComment;
+  response.writeHead(OK, "text/plain");
+  response.write(comments);
+  response.end();
+}
 // --------- ACOUNT STUFF --------------------------
 
 function accountSettingsSignIn(store, response){
@@ -1046,7 +1108,7 @@ function putComments(response,username, err, rows){
   }
   else {
     response.writeHead(OK, "text/plain");
-    response.write(newCommentTemplate);
+    response.write(comments);
     response.end();
   }
   function doOneComment(index,voted){
@@ -1077,7 +1139,6 @@ function putComments(response,username, err, rows){
     comments = comments + filledComment;
 
     if (index === rows.length-1){
-      comments = comments + newCommentTemplate;
       response.writeHead(OK, "text/plain");
       response.write(comments);
       response.end();
