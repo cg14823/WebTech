@@ -6,9 +6,55 @@ var prsstring = null;
 function documentready(){
   $('#account-list-el').hide();
   checkLogged();
-  if($("#post-wrap").is(":empty")){
-    trending();
+}
+
+function checkLogged(){
+  console.log("CHECKING...");
+  if( usr === null || prsstring === null){
+    var usrCookie = readCookie("username");
+    var pstr = readCookie("pstr");
+    if(usrCookie != "" && pstr != ""){
+      console.log("Checking user");
+      var data ={usr:usrCookie, per: pstr};
+      var datajson = JSON.stringify(data);
+      $.ajax({
+        type:"POST",
+        url:"/persignin",
+        data:datajson,
+        success:checkPersistent,
+        dataType: "json"
+      });
+    }
+    else{
+      $('#account-list-el').hide();
+      $('#signin-list-el').show();
+      $('#upload-button').prop('disabled', true);
+    }
   }
+  else{
+    console.log("NO USER");
+    $('#signin-list-el').hide();
+    $('#account-list-el').show();
+    $('#upload-button').prop('disabled', false);
+  }
+  loadThePage();
+}
+
+function checkPersistent(data){
+  if(data.error_code==0){
+    usr = data.usr;
+    prsstring = data.pers;
+    var pstrcookie ="pstr=" +prsstring+";"
+    document.cookie = pstrcookie;
+    $('#signin-list-el').hide();
+    $('#account-list-el').show();
+    $('#upload-button').prop('disabled', false);
+  }
+  loadThePage();
+}
+
+function loadThePage(){
+  trending();
 }
 
 function uploadSubmit (){
@@ -51,7 +97,6 @@ function uploadSubmit (){
   }
 }
 
-
 function uploadSuccess(data){
   switch (data.error_code) {
     case 0:
@@ -60,49 +105,6 @@ function uploadSuccess(data){
     default:
       alert("Sorry our servers can not deal with your meme powers :(");
       break;
-  }
-}
-
-function checkLogged(){
-  console.log("CHECKING...");
-  if( usr === null || prsstring === null){
-    var usrCookie = readCookie("username");
-    var pstr = readCookie("pstr");
-    if(usrCookie != "" && pstr != ""){
-      console.log("Checking user");
-      var data ={usr:usrCookie, per: pstr};
-      var datajson = JSON.stringify(data);
-      $.ajax({
-        type:"POST",
-        url:"/persignin",
-        data:datajson,
-        success:checkPersistent,
-        dataType: "json"
-      });
-    }
-    else{
-      $('#account-list-el').hide();
-      $('#signin-list-el').show();
-      $('#upload-button').prop('disabled', true);
-    }
-  }
-  else{
-    console.log("NO USER");
-    $('#signin-list-el').hide();
-    $('#account-list-el').show();
-    $('#upload-button').prop('disabled', false);
-  }
-}
-
-function checkPersistent(data){
-  if(data.error_code==0){
-    usr = data.usr;
-    prsstring = data.pers;
-    var pstrcookie ="pstr=" +prsstring+";"
-    document.cookie = pstrcookie;
-    $('#signin-list-el').hide();
-    $('#account-list-el').show();
-    $('#upload-button').prop('disabled', false);
   }
 }
 
@@ -148,7 +150,6 @@ function newTag(){
   $("#newTag").find("a").append('<span class="sr-only">(current)</span>');
 }
 
-
 function topTag(){
   //checkLogged();
 
@@ -181,74 +182,11 @@ function memeCreator(){
   $("#memeCreatorTag").find("a").append('<span class="sr-only">(current)</span>');
 }
 
-function singlePost(mypostID){
-  var data = {postID: mypostID,username: usr, prs: prsstring};
-  var datajson = JSON.stringify(data);
-
-  $.ajax({
-    type:"POST",
-    url:"/singlepost",
-    data:datajson,
-    success: loadSinglePage,
-    dataType: "text"
-  });
-  $("#tabs").find(".sr-only").remove();
-  $("#trendTag").removeClass();
-  $("#newTag").removeClass();
-  $("#topTag").removeClass();
-  $("#memeCreatorTag").removeClass();
-}
-
-function loadComments(mypostID) {
-  var data = {postID: mypostID,username: usr};
-  var datajson = JSON.stringify(data);
-  $.ajax({
-    type:"POST",
-    url:"/comments",
-    data:datajson,
-    success: writeComments,
-    dataType: "text"
-  });
-  $("#tabs").find(".sr-only").remove();
-  $("#trendTag").removeClass();
-  $("#newTag").removeClass();
-  $("#topTag").removeClass();
-  $("#memeCreatorTag").removeClass();
-}
-
 function loadPage(data){
   //checkLogged();
   var incData = JSON.parse(data);
   $("#post-wrap").empty();
   $(".post-wrap").append(incData.postData);
-}
-function writeComments(data){
-  $(".the-comments").empty();
-  $(".the-comments").append(data);
-}
-
-function loadSinglePage(data){
-  var incData = JSON.parse(data);
-  $("#post-wrap").empty();
-  $(".single-post").empty();
-  $(".the-comments").empty();
-  $(".single-post").append(incData.postData);
-  $("#comment-image").empty();
-  loadComments(incData.postID);
-}
-
-function voteComment(mycommentID,vote){
-  if (usr != null && prsstring != null){
-    var data = {commentID: mycommentID,voteState: vote,username: usr, prs: prsstring};
-    var datajson = JSON.stringify(data);
-    $.ajax({
-      type:"POST",
-      url:"/commentvote",
-      data:datajson,
-      success: updateCommentVotes,
-      dataType: "text"
-    });
-  }
 }
 
 function votePost(mypostID,vote){
@@ -263,71 +201,6 @@ function votePost(mypostID,vote){
       dataType: "text"
     });
   }
-}
-
-function createNewComment(){
-  var input = $("#new-comment-content").val();
-  $(".new-comment").remove();
-  console.log(input);
-}
-
-function updateCommentVotes(data){
-    var incData = JSON.parse(data);
-    var ups = '#comup' + incData.comID;
-    var downs = '#comdown' + incData.comID;
-    var commentTitleID = '#'+incData.comID;
-    $(ups).empty();
-    $(downs).empty();
-    $(ups).append(incData.ups);
-    $(downs).append(incData.downs);
-    if (incData.voteState === 1){
-      switch (incData.change){
-        case 'create':
-          $(commentTitleID).find("#not-voted-up").each(function(){
-            $(this).attr("id","voted-up");
-          });
-          break;
-
-        case 'delete':
-          $(commentTitleID).find("#voted-up").each(function(){
-            $(this).attr("id","not-voted-up");
-          });
-          break;
-
-        case 'update':
-          $(commentTitleID).find("#not-voted-up").each(function(){
-            $(this).attr("id","voted-up");
-          });
-          $(commentTitleID).find("#voted-down").each(function(){
-            $(this).attr("id","not-voted-down");
-          });
-          break;
-      }
-    }
-    else {
-      switch (incData.change){
-        case 'create':
-          $(commentTitleID).find("#not-voted-down").each(function(){
-            $(this).attr("id","voted-down");
-          });
-          break;
-
-        case 'delete':
-          $(commentTitleID).find("#voted-down").each(function(){
-            $(this).attr("id","not-voted-down");
-          });
-          break;
-
-        case 'update':
-          $(commentTitleID).find("#not-voted-down").each(function(){
-            $(this).attr("id","voted-down");
-          });
-          $(commentTitleID).find("#voted-up").each(function(){
-            $(this).attr("id","not-voted-up");
-          });
-          break;
-      }
-    }
 }
 
 function updatePostVotes(data){
@@ -469,7 +342,7 @@ function signUpDone(data){
       document.cookie = usrcookie;
       document.cookie = pstrcookie;
       document.cookie = expireT;
-
+      loadThePage();
       break;
     case 1:
       displayErrorSignUp('<p>Sorry we are having problems connecting to the database.</p>',1);
@@ -499,6 +372,7 @@ function signUpDone(data){
       displayErrorSignUp('<p>Unknown Error</p>',2);
       break;
   }
+
 }
 
 

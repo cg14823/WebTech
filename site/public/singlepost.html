@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet"/>
   <link rel="stylesheet" href="css/bootstrap.min.css"/>
   <script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
-  <script type="text/javascript" src="js/memefy.js"></script>
+  <script type="text/javascript" src="js/singlepost.js"></script>
   <script type="text/javascript" src="js/bootstrap.min.js"></script>
 </head>
 <body>
@@ -75,9 +75,17 @@
   </nav>
 
   <div class="container">
-    <div class="single-post">
-    </div>
-    <div class="the-comments">
+    <div class="post-wrap">
+      <div class="single-post">
+      </div>
+      <div class="new-comment">
+        <textarea id="new-comment-content" placeholder="Write your comment here..."></textarea>
+        <br></br>
+        <button type="submit" id="new-comment-button" class="btn btn-default" onclick="">Submit</button>
+      </div>
+      <div class="the-comments">
+      </div>
+
     </div>
   </div>
 
@@ -85,7 +93,7 @@
   //Get the postID and load the post
   var params = window.location.search;
   var postID = params.substring(params.indexOf("=")+1);
-  singlePost(postID);
+  documentready(postID);
   </script>
 
  <!-- SIGN IN MODAL -->
