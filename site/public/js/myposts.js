@@ -40,9 +40,6 @@ function checkPersistent(data){
       $("#no-posts").empty();
     }
   }
-  else{
-    alert("Your memes are to good for our database, please try later");
-  }
 }
 
 function checkLogged(){
