@@ -6,12 +6,33 @@
   margin: auto;
   padding-left: 20px;
   padding-right: 20px;
+  max-width: 500px;
 }
 
 .search-form{
   width:75%;
   padding-right: 0px;
   display: inline;
+}
+.form-centerd{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 20px;
+}
+#accountVerify{
+  max-width: 500px;
+}
+.btn-fifteen{
+  padding-right: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.form-group-c{
+  padding-bottom: 10px;
+  height: auto;
+  overflow: auto;
 }
 .search-button{
   width:25%;
@@ -116,6 +137,13 @@ textarea{
 
 .upload-label{
   font-size: 18px;
+}
+.changep{
+  display: block;
+  padding-left: 15px;
+  padding-bottom: 10px;
+  font-size: 18px;
+  text-decoration: underline;
 }
 #upload-c{
   margin-left: 20px;

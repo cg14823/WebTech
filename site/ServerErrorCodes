@@ -13,6 +13,7 @@ ERROR CODES:
 010 :- upload fail
 012 :- Data sent more than 2mb
 013 :- upload title exceeds 40 characters
+014 :- not same password
 
 
 Account VALID:

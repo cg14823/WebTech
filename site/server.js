@@ -44,6 +44,7 @@ start(8080);
 */
 
 // QUERIES PREPARED STATEMENTS
+var updatePassword = db.prepare("update users set password = ? where username = ?");
 var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt) values ( ?, ?, ?, ?)");
 var uniqueUserName = db.prepare("select username from users where username=?");
 var uniqueEmailName = db.prepare("select userEmail from users where userEmail =?");
@@ -225,7 +226,18 @@ function handle(request, response) {
         });
         function commentReady() {accessDBComments(store,response);}
         break;
-
+      case '/change-password':
+        console.log("Request received");
+        var store = '';
+        request.on('data', function(data)
+        {
+          store += data;
+        });
+        request.on('end', function()
+        {
+          accountSettingsSignIn(store, response);
+        });
+        break;
       case '/commentvote':
         var store = '';
         request.on('data', function(data)
@@ -292,6 +304,112 @@ function handle(request, response) {
     }
 }
 
+// --------- ACOUNT STUFF --------------------------
+
+function accountSettingsSignIn(store, response){
+  console.log("Request started");
+  var data = JSON.parse(store);
+  if(checkPasswords(data.oldpd,data.p1, data.p2)){
+    signin_query.get([data.usr], accountSettingsready);
+    function accountSettingsready(err,row){ accountSettings2(err,row,data,response);}
+  }
+  else{
+    var dataresponse = {error_code: 14, err:"<p>Password must be between 8-20 character. Password must contain characters and numbers. Make sure passwords match and that your old password is correct.</p>"};
+    accountSettingsresponse(error_code);
+  }
+}
+
+
+function checkPasswords(og, p1,p2){
+  if( p1 === p2){
+    if(p1 !== og){
+      if(p1.length > 20 || p1.length < 8){
+
+        return false;
+      }
+      else if (!(/\d/.test(p1)) || !(/[a-zA-Z]/.test(p1))) {
+        return false;
+      }
+    }
+    else{
+      return false;
+    }
+  }
+  else{
+    return false;
+  }
+  return true;
+}
+
+function accountSettings2(err, row, data,response){
+  console.log(err);
+  if(err === null){
+    if(row != undefined){
+      bcrypt.hash(data.oldpd, row.salt, hashready);
+      function hashready(err, hash){accountHashCompare(err, hash, row, data, response);}
+    }
+    else{
+      var dataresponse = {error_code: 7, err:"<p>Incorrect password.</p>"};
+      accountSettingsresponse(dataresponse,response);
+    }
+  }
+  else{
+    var dataresponse = {error_code: 1, err:"<p>We are having some issues with our database please try later.</p>"};
+    accountSettingsresponse(dataresponse,response);
+  }
+}
+
+function accountHashCompare(err, hash, row, data, response ){
+  if (err === null){
+    if(hash === row.password){
+      console.log("User verified");
+      bcrypt.hash(data.p1, row.salt,hashready);
+      function hashready(err, hash){changepassword(err, hash, data, response);}
+    }
+    else{
+      var dataresponse = {error_code: 8, err:"<p>Incorrect password.</p>" };
+      accountSettingsresponse(dataresponse,response);
+    }
+  }
+  else{
+    var dataresponse = {error_code: 1, err:"<p>We are having some issues with our database please try later.</p>"};
+    accountSettingsresponse(dataresponse,response);
+  }
+}
+
+function changepassword(err, hash, data, response){
+  if(err === null){
+    updatePassword.run([hash, data.usr], passwordChangedReady);
+    function passwordChangedReady(err) {
+      passwordChanged(err,response);
+    }
+  }
+  else{
+    var dataresponse = {error_code: 1, err:"<p>We are having some issues with our database please try later.</p>"};
+    accountSettingsresponse(dataresponse,response)
+  }
+}
+
+function passwordChanged(err,response){
+  if(err != null){
+    var dataresponse = {error_code: 1, err:"<p>We are having some issues with our database please try later.</p>"};
+    accountSettingsresponse(dataresponse, response);
+  }
+  else{
+    var dataresponse = {error_code: 0};
+    accountSettingsresponse(dataresponse, response);
+  }
+}
+
+function accountSettingsresponse(data, response){
+  var signResponse = JSON.stringify(data);
+  var typeHeader = { "Content-Type": "application/json" };
+  response.writeHead(OK, typeHeader);
+  response.write(signResponse);
+  response.end();
+}
+
+// ------------------ACCOUNT END--------------------------------
 
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
@@ -334,7 +452,9 @@ function gmpost2(err,rows,response){
       if(posts===''){
         textResponse('<p>You have no posts :(</p>',response);
       }
-      textResponse(posts,response);
+      else{
+        textResponse(posts,response);
+      }
     }
     else{
       textResponse('<p>You have no posts :(</p>',response);
