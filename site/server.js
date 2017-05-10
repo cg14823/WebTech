@@ -51,7 +51,7 @@ var addpers = db.prepare("update users set persistentlogin=? where username=?");
 var signin_query = db.prepare("select password, salt from users where username=?");
 
 var singlePostStatement = db.prepare("select * from posts where postID=?");
-var commentsStatement = db.prepare("select * from comments where postID = ?");
+var commentsStatement = db.prepare("select * from comments where postID = ? order by comUpvotes desc");
 var comVotesStatement = db.prepare("select * from votesComments where commentID = ? and username = ?");
 var postVotesStatement = db.prepare("select * from votesPosts where postID = ? and username = ?");
 
@@ -73,6 +73,8 @@ var getmypost = db.prepare("select * from users inner join posts on users.userna
 var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit 10");
 
 var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp) values (?, ?, ?, ?)");
+
+var createCommentStatement = db.prepare("insert into comments (postID, username, comTimestamp, content) values (?, ?, ?, ?)");
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
     types = defineTypes();
@@ -273,6 +275,18 @@ function handle(request, response) {
             gmupready(store, response);
           });
           break;
+        case '/createcomment':
+          console.log("Received");
+          var store = '';
+          request.on('data', function(data)
+          {
+            store += data;
+          });
+          request.on('end', function()
+          {
+            createCommentReady(store, response);
+          });
+          break;
       case '/?':
         // search
         break;
@@ -292,6 +306,54 @@ function handle(request, response) {
     }
 }
 
+// --Create Comment
+function createCommentReady(store,response){
+  var data = JSON.parse(store);
+  var username = data.username;
+  var prsstring = data.prs;
+  checkUser.get([username,prsstring], prsCheck);
+  function prsCheck(err,row){
+    if (!(row === undefined)){
+      var myTimestamp = Date.now();
+      createCommentStatement.get([data.postID,username,myTimestamp,data.content],insertComment);
+    }
+    else {
+      console.log("Not Logged In");
+    }
+  }
+  function insertComment(err){getCommentID(err,response);}
+}
+
+function getCommentID(err,response){
+  db.get("SELECT last_insert_rowid()",useCommentID);
+  function useCommentID(err,row){addCommentStart(err,row,response);}
+}
+
+function addCommentStart(err,row,response){
+  db.get("SELECT * FROM comments where commentID=?",row['last_insert_rowid()'],addCommentToP);
+  function addCommentToP(err,row){addCommentToPage(err,row,response);}
+}
+
+function addCommentToPage(err,row,response){
+  var comments = '';
+  var filledComment = commentTemplate.replace("%USER%",row.username);
+  var date = (new Date(row.comTimestamp)).toString();
+  filledComment = filledComment.replace("%DATE%",date.substring(4,24));
+  filledComment = filledComment.replace("%CONTENT%",row.content);
+  filledComment = filledComment.replace("%UPVOTES%",row.comUpvotes);
+  filledComment = filledComment.replace("%DOWNVOTES%",row.comDownvotes);
+  filledComment = filledComment.replace("%COMMENTID%",row.commentID);
+  filledComment = filledComment.replace("%COMMENTID%",row.commentID);
+  filledComment = filledComment.replace("%commentTemplate%",row.commentID);
+  filledComment = filledComment.replace("%UPID%","comup"+row.commentID);
+  filledComment = filledComment.replace("%DOWNID%","comdown"+row.commentID);
+  filledComment = filledComment.replace("%VOTEDUP%","not-voted-up");
+  filledComment = filledComment.replace("%VOTEDDOWN%","not-voted-down");
+  comments = comments + filledComment;
+  response.writeHead(OK, "text/plain");
+  response.write(comments);
+  response.end();
+}
 
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
@@ -926,7 +988,7 @@ function putComments(response,username, err, rows){
   }
   else {
     response.writeHead(OK, "text/plain");
-    response.write(newCommentTemplate);
+    response.write(comments);
     response.end();
   }
   function doOneComment(index,voted){
@@ -957,7 +1019,6 @@ function putComments(response,username, err, rows){
     comments = comments + filledComment;
 
     if (index === rows.length-1){
-      comments = comments + newCommentTemplate;
       response.writeHead(OK, "text/plain");
       response.write(comments);
       response.end();
