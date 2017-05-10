@@ -2,7 +2,7 @@
 Social meme sharing plataform.
 
 
-##Node Dependecies:
+## Node Dependecies:
 -http
 -formidable
 -util
