@@ -396,7 +396,6 @@ function searchReady(store,response){
       dbQuery = dbQuery + searchTitleStatement.replace("#QUERY#",queryList[i]);
     }
   }
-  console.log(dbQuery);
   db.all(dbQuery,getResults);
   function getResults(err,rows) {formatPost(response, err, store, rows);}
 }
@@ -511,7 +510,6 @@ function accountSettingsresponse(data, response){
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
   var data = JSON.parse(store);
-  console.log(data);
   getmypost.all([data.user, data.pstr], gmpostsready);
   function gmpostsready(err,row){ gmpost2(err,row,response);}
 }
@@ -525,7 +523,6 @@ function gmupready(store, response){
 function gmpost2(err,rows,response){
   if(err == null){
     if(rows != undefined){
-      console.log(rows);
       var posts='';
       for (var i=0; i < rows.length; i++){
         var filledPost = postTemplate.replace("%postTemplate%",rows[i].postTitle);
@@ -1021,7 +1018,6 @@ function formatPost(response, err,myData, rows){
   var incData = JSON.parse(myData);
   var myUsername = incData.username;
   var posts='';
-  console.log(rows);
   if (!(rows === undefined)){
     if (!(rows[0] === undefined)){
       checkVotedPost.get([rows[0].postID,myUsername],function (err,row){
