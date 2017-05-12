@@ -23,7 +23,7 @@ function requestMyposts(){
 }
 
 function loadMyposts(data){
-  $("#mypost-wrap").append(data);
+  $("#post-wrap").append(data);
 }
 
 function checkPersistent(data){
@@ -35,7 +35,7 @@ function checkPersistent(data){
     $('#signin-list-el').hide();
     $('#account-list-el').show();
     $('#upload-button').prop('disabled', false);
-    if($("#mypost-wrap").is(":empty")){
+    if($("#post-wrap").is(":empty")){
       requestMyposts();
       $("#no-posts").empty();
     }
