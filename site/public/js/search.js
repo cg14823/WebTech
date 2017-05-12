@@ -3,6 +3,7 @@
 var usr = null;
 var prsstring = null;
 var searchQuery = null;
+var loaded = false;
 
 function documentready(searchText){
   $('#account-list-el').hide();
@@ -56,7 +57,10 @@ function checkPersistent(data){
 }
 
 function loadThePage(){
-  beginSearch();
+  if (!loaded){
+    loaded = true;
+    beginSearch();
+  }
 }
 
 function uploadSubmit (){
@@ -404,7 +408,21 @@ function readCookie(name) {
 }
 
 function beginSearch(){
-  console.log(searchQuery);
+  var data = {username: usr, prs: prsstring,searchText:searchQuery};
+  var datajson = JSON.stringify(data);
+  $.ajax({
+    type:"POST",
+    url:"/search",
+    data:datajson,
+    success: putResults,
+    dataType: "text"
+  });
 }
 
-$( document ).ready(documentready);
+function putResults(data){
+  var incData = JSON.parse(data);
+  if (!(incData.postData === '')){
+    $("#post-wrap").empty();
+    $("#post-wrap").append(incData.postData);
+  }
+}
