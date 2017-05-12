@@ -15,23 +15,30 @@ function infi_scroll(){
     //post loaded in 10s so if the number of post is not a mulyiple of ten do not do request
     if($("#post-wrap").children().length % 10 === 0){
 
+      $("#loader-text").attr("class","centeredShow");
       var loadId = $(".identifer").attr("id");
-      console.log(loadId);
+      var posts = $("#post-wrap").children();
+      var detail =$($(posts[posts.length-1]).children()[0]).text().split(" ");
       switch (loadId){
         case 'trending':
-          var posts = $("#post-wrap").children();
-          var detail =$($(posts[posts.length-1]).children()[0]).text().split(" ");
-          var data = {origin:loadId, upvotes:parseInt(details[2])};
+          var data = {origin:loadId, upvotes:parseInt(detail[2])};
+          requestMorePosts(JSON.stringify(data));
           break;
         case 'new':
+          var data = {origin:loadId, timestamp:parseInt(detail[0])};
+          requestMorePosts(JSON.stringify(data));
           break;
         case 'top':
+          var data = {origin:loadId, upvotes:parseInt(detail[2])};
+          requestMorePosts(JSON.stringify(data));
           break;
         case 'myUp':
+          var data = {origin:loadId, timestamp:parseInt(detail[2]), user:detail[1]};
+          requestMorePosts(JSON.stringify(data));
           break;
         case 'myP':
-          break;
-        case 'search':
+          var data = {origin:loadId, user:detail[1]};
+          requestMorePosts(JSON.stringify(data));
           break;
       }
     }
@@ -39,15 +46,16 @@ function infi_scroll(){
   lastScroll = scrollTop;
 }
 
-function requestMorePosts(data, origin){
+function requestMorePosts(data){
   $.ajax({
     type:"POST",
     url:"/infiscroll-request",
-    data:datajson,
+    data:data,
     success:loadnewposts,
     dataType: "text"
   });
 }
 function loadnewposts(posts){
+  $("#loader-text").attr("class","noShow");
   $("#post-wrap").append(posts);
 }

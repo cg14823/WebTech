@@ -100,6 +100,11 @@
   padding-bottom: 40px;
 }
 
+.centeredShow{
+  display: block;
+  text-align: center;
+  padding-top: 10px;
+}
 textarea{
   resize: vertical;
   width: 100%;
