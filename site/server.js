@@ -74,12 +74,11 @@ var checkVotedComment = db.prepare("select * from votesComments where commentID 
 var getmypost = db.prepare("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit 10");
 var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit 10");
 
-var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp) values (?, ?, ?, ?)");
+var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp, postTags) values (?, ?, ?, ?, ?)");
 
 var createCommentStatement = db.prepare("insert into comments (postID, username, comTimestamp, content) values (?, ?, ?, ?)");
 
-var searchTitleStatement = "postTitle like '%#QUERY#%'";
-var searchTagsStatement = "select * from posts where postTags like '%#QUERY#%'";
+var searchTagsStatement = "postTags like '%#QUERY#%'";
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
     types = defineTypes();
@@ -393,7 +392,7 @@ function searchReady(store,response){
   for (var i=0; i<queryList.length;i++){
     if (queryList[i] != ""){
       if(i!=0) dbQuery = dbQuery + " or ";
-      dbQuery = dbQuery + searchTitleStatement.replace("#QUERY#",queryList[i]);
+      dbQuery = dbQuery + searchTagsStatement.replace("#QUERY#",queryList[i]);
     }
   }
   db.all(dbQuery,getResults);
@@ -628,8 +627,17 @@ function check_user_step1(err,row,fields, files,response){
 
 function upload_step2(fields, files,response){
   var filePath = files.image.path.slice(files.image.path.indexOf('memes'));
+  var postTitleList = fields.title.split(",");
+  var postTags = "";
+  for (var i=0;i<postTitleList.length;i++){
+    postTags = postTags + postTitleList[i];
+  }
+  var descList = fields.description.split(",");
+  for (var i=0;i<descList.length;i++){
+    postTags = postTags + descList[i];
+  }
   filePath ='\\'+ filePath;
-  insertPost.run([fields.title,filePath,fields.user, Date.now()], insertPostReady);
+  insertPost.run([fields.title,filePath,fields.user, Date.now(),postTags], insertPostReady);
   function insertPostReady(err){ upload_step3(err,fields,response);}
 }
 
