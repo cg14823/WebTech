@@ -23,6 +23,12 @@
 #accountVerify{
   max-width: 500px;
 }
+.identifier{
+  display: none;
+}
+.noshow{
+  display: none;
+}
 .btn-fifteen{
   padding-right: 15px;
   display: flex;

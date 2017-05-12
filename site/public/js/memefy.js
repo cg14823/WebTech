@@ -94,13 +94,18 @@ function uploadSubmit (){
       success: uploadSuccess,
       dataType:"json"
     });
+
+    $("#up-bttn").attr("disabled", true);
   }
 }
 
 function uploadSuccess(data){
   switch (data.error_code) {
     case 0:
+      $("#up-bttn").attr("disabled", false);
+      $("#upForm")[0].reset();
       alert("Your meme was uploaded.");
+
       break;
     default:
       alert("Sorry our servers can not deal with your meme powers :(");
@@ -127,6 +132,7 @@ function trending(){
   $("#memeCreatorTag").removeClass();
   $("#trendTag").addClass("active");
   $("#trendingTag").find("a").append('<span class="sr-only">(current)</span>');
+  $(".identifier").attr("id","trending");
 }
 
 function newTag(){
@@ -148,6 +154,7 @@ function newTag(){
   $("#memeCreatorTag").removeClass();
   $("#newTag").addClass("active");
   $("#newTag").find("a").append('<span class="sr-only">(current)</span>');
+  $(".identifier").attr("id","new");
 }
 
 function topTag(){
@@ -169,18 +176,9 @@ function topTag(){
   $("#memeCreatorTag").removeClass();
   $("#topTag").addClass("active");
   $("#topTag").find("a").append('<span class="sr-only">(current)</span>');
+  $(".identifier").attr("id","top");
 }
 
-function memeCreator(){
-  //checkLogged();
-  $("#tabs").find(".sr-only").remove();
-  $("#trendTag").removeClass();
-  $("#newTag").removeClass();
-  $("#topTag").removeClass();
-  $("#memeCreatorTag").removeClass();
-  $("#memeCreatorTag").addClass("active");
-  $("#memeCreatorTag").find("a").append('<span class="sr-only">(current)</span>');
-}
 
 function loadPage(data){
   //checkLogged();
