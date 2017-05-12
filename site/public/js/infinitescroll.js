@@ -36,9 +36,18 @@ function infi_scroll(){
       }
     }
   }
-  lastScroll =scrollTop;
+  lastScroll = scrollTop;
 }
 
-function moreTrending(data){
-
+function requestMorePosts(data, origin){
+  $.ajax({
+    type:"POST",
+    url:"/infiscroll-request",
+    data:datajson,
+    success:loadnewposts,
+    dataType: "text"
+  });
+}
+function loadnewposts(posts){
+  $("#post-wrap").append(posts);
 }
