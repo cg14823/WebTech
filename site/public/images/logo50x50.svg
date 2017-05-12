@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="60"
+   height="50"
+   viewBox="0 0 15.874999 13.229167"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.0 r15299"
+   sodipodi:docname="logo50x50.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="12.55625"
+     inkscape:cx="21.516455"
+     inkscape:cy="17.830195"
+     inkscape:document-units="mm"
+     inkscape:current-layer="g851"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="2400"
+     inkscape:window-height="1321"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-283.77082)">
+    <g
+       id="g851"
+       transform="rotate(-30,6.6145835,290.38541)">
+      <g
+         id="g4503"
+         transform="matrix(0.9804725,-0.0013254,-0.0013254,0.98200294,1.659725,5.896305)">
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#444444;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="path10"
+           sodipodi:type="arc"
+           sodipodi:cx="6.6145835"
+           sodipodi:cy="290.38541"
+           sodipodi:rx="6.5496182"
+           sodipodi:ry="6.4196892"
+           sodipodi:start="0"
+           sodipodi:end="6.2826093"
+           sodipodi:open="true"
+           d="m 13.164202,290.38541 a 6.5496182,6.4196892 0 0 1 -6.5486754,6.41969 6.5496182,6.4196892 0 0 1 -6.55056108,-6.41784 6.5496182,6.4196892 0 0 1 6.54678848,-6.42154 6.5496182,6.4196892 0 0 1 6.552447,6.41599" />
+        <g
+           transform="translate(2.3333333e-7,-2.1639153)"
+           id="g35"
+           style="fill:#ffff00">
+          <path
+             inkscape:connector-curvature="0"
+             id="path817"
+             d="m 2.3473892,288.34544 8.5343878,4.07993"
+             style="fill:none;fill-opacity:1;stroke:#444444;stroke-width:0.80000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+          <g
+             id="g835"
+             style="fill:none;fill-opacity:1;stroke:#444444;stroke-width:0.80000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+            <path
+               style="fill:none;fill-opacity:1;stroke:#444444;stroke-width:0.80000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+               d="M 2.4059532,292.54361 10.823213,288.2272"
+               id="path817-2"
+               inkscape:connector-curvature="0" />
+          </g>
+        </g>
+        <path
+           d="m 3.0610905,291.32044 h 7.1069855 v 1.46434 q 0,1.16617 -0.9405628,1.9381 -0.9405629,0.77523 -2.5234616,0.77523 -1.6517204,0 -2.6473408,-0.77523 -0.9956203,-0.77193 -0.9956203,-1.99111 z m 6.2903018,0.6626 H 3.8731864 v 0.74542 q 0,0.97733 0.738686,1.52397 0.7386861,0.54996 2.0692386,0.54996 1.3305526,0 2.0004169,-0.56321 0.6698644,-0.56321 0.6698644,-1.48091 z"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:4.99041319px;font-family:'Microsoft YaHei';-inkscape-font-specification:'Microsoft YaHei';letter-spacing:0px;word-spacing:0px;fill:#444444;fill-opacity:1;stroke:none;stroke-width:0.19961652"
+           id="path5230"
+           inkscape:connector-curvature="0" />
+      </g>
+    </g>
+  </g>
+</svg>
