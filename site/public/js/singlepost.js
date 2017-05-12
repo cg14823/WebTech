@@ -4,11 +4,10 @@ var usr = null;
 var prsstring = null;
 var THEpostID = null;
 
-function documentready(postId){
+function documentready(postID){
   $('#account-list-el').hide();
   THEpostID = postID;
   checkLogged();
-
 }
 
 function singlePost(mypostID){
@@ -42,8 +41,8 @@ function loadSinglePage(data){
   loadComments(myID);
 }
 
-function loadComments(mypostID) {
-  var data = {postID: mypostID,username: usr};
+function loadComments(mypostID,val) {
+  var data = {postID: mypostID,username: usr,amountToShow:val};
   var datajson = JSON.stringify(data);
   $.ajax({
     type:"POST",
@@ -95,7 +94,7 @@ function votePost(mypostID,vote){
 function createNewComment(myPostID){
   var input = $("#new-comment-content").val();
   //$("#new-comment-content").val() = "";
-  console.log(input);
+  console.log(myPostID);
   var data = {postID: myPostID,content: input,username: usr, prs: prsstring};
   var datajson = JSON.stringify(data);
   $.ajax({

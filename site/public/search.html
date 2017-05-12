@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet"/>
   <link rel="stylesheet" href="css/bootstrap.min.css"/>
   <script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
-  <script type="text/javascript" src="js/singlepost.js"></script>
+  <script type="text/javascript" src="js/search.js"></script>
   <script type="text/javascript" src="js/bootstrap.min.js"></script>
 </head>
 <body>
@@ -24,16 +24,17 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a href="/index.html"><img id="homelogo" alt="brand" src="/images/banner-logo.svg"></img></a>
+        <a class="navbar-brand" href="\index.html">Memefy</a>
       </div>
 
 
       <div class="collapse navbar-collapse" id="navbar-collapse">
         <!--Navigation tabs -->
         <ul class="nav navbar-nav" id="tabs">
-          <li id="trendTag" onclick="trending()"><a href="./index.html">Trending</a></li>
-          <li id="newTag" onclick="newTag()"><a href="./index.html">New</a></li>
-          <li id="topTag" onclick="topTag()"><a href="./index.html">Top</a></li>
+          <li id="trendTag" ><a href="./index.html">Trending</a></li>
+          <li id="newTag" ><a href="./index.html">New</a></li>
+          <li id="topTag" ><a href="./index.html">Top</a></li>
+          <li id="memeCreatorTag" onclick="memeCreator()"><a href="">Meme Creator</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right" id ="account-or-signIn">
           <li id="signin-list-el"><button type="button" id="signin-btn" class="btn btn-primary" data-toggle="modal" data-target="#signin-modal">Sign In</button></li>
@@ -59,10 +60,10 @@
             <a id="ref-wrap" href ="\upload.html"><button type="button" id ="upload-button" class="btn btn-default">upload</button></a>
           </li>
         </ul>
-        <form class="navbar-form navbar-right" action="/search.html">
+        <form class="navbar-form navbar-right" action="/search.html" method="get">
 
           <span class="search-form">
-            <input type="text" class="form-control" id="searchInput" placeholder="Search"/>
+            <input type="text" name="searchData" class="form-control" id="searchInput" placeholder="Search"/>
           </span>
           <span class="search-button">
             <button type="submit" class="btn btn-default">Search</button>
@@ -74,25 +75,18 @@
   </nav>
 
   <div class="container">
-    <div class="post-wrap">
-      <div class="single-post">
-      </div>
-      <div class="new-comment">
-        <textarea id="new-comment-content" placeholder="Write your comment here..."></textarea>
-        <br></br>
-        <button type="submit" id="new-comment-button" class="btn btn-default" onclick="">Submit</button>
-      </div>
-      <div class="the-comments">
-      </div>
-
+    <div class="search-results">
+      No search results to display
     </div>
+    <div class="post-wrap" id ="post-wrap"></div>
+    <div class="loader"></div>
   </div>
 
   <script>
-  //Get the postID and load the post
+  //Get the search query and load the results
   var params = window.location.search;
-  var postID = params.substring(params.indexOf("=")+1);
-  documentready(postID);
+  var searchQuery = params.substring(params.indexOf("=")+1);
+  documentready(searchQuery);
   </script>
 
  <!-- SIGN IN MODAL -->
