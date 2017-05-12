@@ -77,6 +77,9 @@ var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.
 var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp) values (?, ?, ?, ?)");
 
 var createCommentStatement = db.prepare("insert into comments (postID, username, comTimestamp, content) values (?, ?, ?, ?)");
+
+var searchTitleStatement = "postTitle like '%#QUERY#%'";
+var searchTagsStatement = "select * from posts where postTags like '%#QUERY#%'";
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
     types = defineTypes();
@@ -276,30 +279,42 @@ function handle(request, response) {
           gmpready(store, response);
         });
         break;
-        case '/getmyupvoteposts':
-          console.log("Received");
-          var store = '';
-          request.on('data', function(data)
-          {
-            store += data;
-          });
-          request.on('end', function()
-          {
-            gmupready(store, response);
-          });
-          break;
-        case '/createcomment':
-          console.log("Received");
-          var store = '';
-          request.on('data', function(data)
-          {
-            store += data;
-          });
-          request.on('end', function()
-          {
-            createCommentReady(store, response);
-          });
-          break;
+      case '/getmyupvoteposts':
+        console.log("Received");
+        var store = '';
+        request.on('data', function(data)
+        {
+          store += data;
+        });
+        request.on('end', function()
+        {
+          gmupready(store, response);
+        });
+        break;
+      case '/createcomment':
+        console.log("Received");
+        var store = '';
+        request.on('data', function(data)
+        {
+          store += data;
+        });
+        request.on('end', function()
+        {
+          createCommentReady(store, response);
+        });
+        break;
+      case '/search':
+        console.log("Received");
+        var store = '';
+        request.on('data', function(data)
+        {
+          store += data;
+        });
+        request.on('end', function()
+        {
+          searchReady(store, response);
+        });
+        break;
       case '/?':
         // search
         break;
@@ -367,6 +382,24 @@ function addCommentToPage(err,row,response){
   response.write(comments);
   response.end();
 }
+
+// Search -------------
+
+function searchReady(store,response){
+  var data = JSON.parse(store);
+  var queryList = data.searchText.split("+");
+  var dbQuery = "";
+  if (queryList.length > 0) dbQuery = "select * from posts where ";
+  for (var i=0; i<queryList.length;i++){
+    if (queryList[i] != ""){
+      if(i!=0) dbQuery = dbQuery + " or ";
+      dbQuery = dbQuery + searchTitleStatement.replace("#QUERY#",queryList[i]);
+    }
+  }
+  db.all(dbQuery,getResults);
+  function getResults(err,rows) {formatPost(response, err, store, rows);}
+}
+
 // --------- ACOUNT STUFF --------------------------
 
 function accountSettingsSignIn(store, response){
@@ -477,7 +510,6 @@ function accountSettingsresponse(data, response){
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
   var data = JSON.parse(store);
-  console.log(data);
   getmypost.all([data.user, data.pstr], gmpostsready);
   function gmpostsready(err,row){ gmpost2(err,row,response);}
 }
@@ -491,7 +523,6 @@ function gmupready(store, response){
 function gmpost2(err,rows,response){
   if(err == null){
     if(rows != undefined){
-      console.log(rows);
       var posts='';
       for (var i=0; i < rows.length; i++){
         var filledPost = postTemplate.replace("%postTemplate%",rows[i].postTitle);
@@ -987,14 +1018,26 @@ function formatPost(response, err,myData, rows){
   var incData = JSON.parse(myData);
   var myUsername = incData.username;
   var posts='';
-  checkVotedPost.get([rows[0].postID,myUsername],function (err,row){
-    var voted = 0;
-    if (row === undefined) voted = 0;
-    else {
-      voted = row.voteState;
+  if (!(rows === undefined)){
+    if (!(rows[0] === undefined)){
+      checkVotedPost.get([rows[0].postID,myUsername],function (err,row){
+        var voted = 0;
+        if (row === undefined) voted = 0;
+        else {
+          voted = row.voteState;
+        }
+        doOnePost(0,voted);
+      });
     }
-    doOnePost(0,voted);
-  });
+  }
+  else {
+    var output = {postData:posts};
+    var outputJson = JSON.stringify(output);
+    var typeHeader = { "Content-Type": "application/json" };
+    response.writeHead(OK, typeHeader);
+    response.write(outputJson);
+    response.end();
+  }
   function doOnePost(index,voted){
     var filledPost = postTemplate.replace("%postTemplate%","post"+rows[index].postID);
     filledPost = filledPost.replace("%POSTTITLE%",rows[index].postTitle);
