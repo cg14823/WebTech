@@ -70,8 +70,8 @@ var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ? 
 var checkVotedPost = db.prepare("select * from votesPosts where postID = ? AND username = ?");
 var checkVotedComment = db.prepare("select * from votesComments where commentID = ? AND username = ?");
 
-var getmypost = db.prepare("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit 10");
-var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit 10");
+var getmypost = db.prepare("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit ?");
+var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit ?");
 
 var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp, postTags) values (?, ?, ?, ?, ?)");
 
@@ -322,7 +322,7 @@ function handle(request, response) {
         });
         request.on('end', function()
         {
-          infinitescrollreq(JSON.parse(store), response);
+          infinitescrollreq(store, response);
         });
         break;
 
@@ -344,21 +344,42 @@ function handle(request, response) {
 
 // ------ INFINITE scroll
 function infinitescrollreq(data, response){
-  switch (data.origin){
+  var incData = JSON.parse(data);
+  switch (incData.origin){
     case 'trending':
-
+      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",10*incData.loaded, dbReady);
+      function dbReady(err, rows){
+        rows = rows.slice(10*(incData.loaded-1));
+        formatPost(response,err,data, rows);
+      }
       break;
     case 'new':
-
+      db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit ?",10*incData.loaded, dbReady)
+      function dbReady(err, rows){
+        rows = rows.slice(10*(incData.loaded-1));
+        formatPost(response,err,data, rows);
+      }
       break;
     case 'top':
-
+      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",10*incData.loaded, dbReady)
+      function dbReady(err, rows){
+        rows = rows.slice(10*(incData.loaded-1));
+        formatPost(response,err,data, rows);
+      }
       break;
     case 'myUp':
-
+      getmyupost.all([incData.username,10*incData.loaded],gmupostsready);
+      function gmupostsready(err,row){
+        row = row.slice(10*(incData.loaded-1));
+        formatPost(response,err,store,row);
+      }
       break;
     case 'myP':
-
+      getmypost.all([incData.username, incData.prs,10*incData.loaded], gmpostsready);
+      function gmpostsready(err,row){
+        row = row.slice(10*(incData.loaded-1));
+        formatPost(response,err,data,row);
+      }
       break;
   }
 
@@ -545,14 +566,14 @@ function accountSettingsresponse(data, response){
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
   var data = JSON.parse(store);
-  getmypost.all([data.user, data.pstr], gmpostsready);
-  function gmpostsready(err,row){ gmpost2(err,row,response);}
+  getmypost.all([data.username, data.pstr,10], gmpostsready);
+  function gmpostsready(err,row){ formatPost(response,err,store,row);}
 }
 
 function gmupready(store, response){
   var data = JSON.parse(store);
-  getmyupost.all([data.user],gmupostsready);
-  function gmupostsready(err,row){ gmpost2(err,row,response);}
+  getmyupost.all([data.username,10],gmupostsready);
+  function gmupostsready(err,row){ formatPost(response,err,store,row);}
 }
 
 function gmpost2(err,rows,response){
@@ -1063,6 +1084,7 @@ function deliver(response, type, err, content) {
 function formatPost(response, err,myData, rows){
   var incData = JSON.parse(myData);
   var myUsername = incData.username;
+  console.log(myUsername);
   var posts='';
   if (!(rows === undefined)){
     if (!(rows[0] === undefined)){
