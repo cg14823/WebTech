@@ -39,9 +39,8 @@ start(8080);
 
 /* TODO::
   --------------Isue list--------------------------------
-  - SERVER ALOWS ME TO UPVOTE IDEFENETLY
-  - Poor responsiveness in navbar when in mobile
-
+- loads of comments instead od in batch
+- no check for enourmous request trying to do DoS
 */
 
 // QUERIES PREPARED STATEMENTS
@@ -314,9 +313,19 @@ function handle(request, response) {
           searchReady(store, response);
         });
         break;
-      case '/?':
-        // search
+
+      case '/infiscroll-request':
+      var store = '';
+        request.on('data', function(data)
+        {
+          store += data;
+        });
+        request.on('end', function()
+        {
+          infinitescrollreq(JSON.parse(store), response);
+        });
         break;
+
       default:
         if (url.includes("?")){
           var qMark = url.indexOf("?");
@@ -332,6 +341,33 @@ function handle(request, response) {
         break;
     }
 }
+
+// ------ INFINITE scroll
+function infinitescrollreq(data, response){
+  switch (data.origin){
+    case 'trending':
+
+      break;
+    case 'new':
+
+      break;
+    case 'top':
+
+      break;
+    case 'myUp':
+
+      break;
+    case 'myP':
+
+      break;
+  }
+
+
+}
+
+
+//----- INFINITE SCROLL end
+
 
 // --Create Comment
 function createCommentReady(store,response){
