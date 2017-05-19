@@ -12,7 +12,7 @@
 // Start the server: change the port to the default 80, if there are no
 // privilege issues and port number 80 isn't already in use.
 
-var http = require("http");
+
 var https = require("https");
 var formidable = require('formidable');
 var util = require('util');
