@@ -12,7 +12,7 @@ function documentready(){
 
 function requestMyposts(){
   console.log("REQUESTING");
-  var datajson = JSON.stringify({user:usr, pstr:prsstring});
+  var datajson = JSON.stringify({username:usr, pstr:prsstring});
   $.ajax({
     type:"POST",
     url:"/getmyposts",
@@ -23,7 +23,8 @@ function requestMyposts(){
 }
 
 function loadMyposts(data){
-  $("#post-wrap").append(data);
+  var posts = JSON.parse(data);
+  $("#post-wrap").append(posts.postData);
 }
 
 function checkPersistent(data){

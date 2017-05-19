@@ -21,7 +21,7 @@ var bcrypt = require('bcryptjs');
 var randomstring = require("randomstring");
 var db = new sql.Database("memedatabase.db");
 
-var postTemplate ='<div class="post" id="%postTemplate%"><span class="noshow">%TIMESTAMP% %USERID% %UPVOTES1%</span><div class="row"><a href="\\singlepost.html?p=%POSTID%"><h3>%POSTTITLE%</h3></a></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><a href="\\singlepost.html?p=%POSTID%"><img  class="post-image" id="post-image" src="%source%" alt="%description%"/></a></div><div class="row"><div onclick="votePost(%POSTID%,1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-2"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="votePost(%POSTID%,-1)" class="col-xs-5"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-2"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div><a href="\\singlepost.html?p=%POSTID%"><div id="comment-image" class="col-xs-2"><span class="glyphicon glyphicon-comment"></span></div></a></div></div>';
+var postTemplate ='<div class="post" id="%postTemplate%"><span class="noshow">%TIMESTAMP% %USERID% %UPVOTES1%</span><div class="row"><a href="\\singlepost.html?p=%POSTID%"><h3>%POSTTITLE%</h3></a></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><a href="\\singlepost.html?p=%POSTID%"><img  class="post-image" id="post-image" src="%source%" alt="%description%"/></a></div><div class="row"><div onclick="votePost(%POSTID%,1)" class="col-xs-5"><div class="col-xs-2"><img id="%VOTEDUP%" src="/images/up-arrow.svg" alt="up-arrow"></img></div><div class="col-xs-2"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="votePost(%POSTID%,-1)" class="col-xs-5"><div class="col-xs-2"><img id="%VOTEDDOWN%" src="/images/down-arrow.svg" alt="down-arrow"></img></div><div class="col-xs-2"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div><a href="\\singlepost.html?p=%POSTID%"><div id="comment-image" class="col-xs-2"><span class="glyphicon glyphicon-comment"></span></div></a></div></div>';
 
 
 var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div class="user-and-date"><span class="comment-user">%USER%</span><span class="comment-date">%DATE%</span></div><div class="comment-content">%CONTENT%</div><div class="ups-n-downs"><div class="row"><div onclick="voteComment(%COMMENTID%,1)" class="col-xs-6"><div class="col-xs-2"><span id="%VOTEDUP%" class="glyphicon glyphicon-arrow-up"></span></div><div class="col-xs-2"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="voteComment(%COMMENTID%,-1)" class="col-xs-6"><div class="col-xs-2"><span id="%VOTEDDOWN%" class="glyphicon glyphicon-arrow-down"></span></div><div class="col-xs-2"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div></div></div></div>'
@@ -70,8 +70,8 @@ var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ? 
 var checkVotedPost = db.prepare("select * from votesPosts where postID = ? AND username = ?");
 var checkVotedComment = db.prepare("select * from votesComments where commentID = ? AND username = ?");
 
-var getmypost = db.prepare("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit 10");
-var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit 10");
+var getmypost = db.prepare("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit ?");
+var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit ?");
 
 var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp, postTags) values (?, ?, ?, ?, ?)");
 
@@ -322,7 +322,7 @@ function handle(request, response) {
         });
         request.on('end', function()
         {
-          infinitescrollreq(JSON.parse(store), response);
+          infinitescrollreq(store, response);
         });
         break;
 
@@ -344,21 +344,42 @@ function handle(request, response) {
 
 // ------ INFINITE scroll
 function infinitescrollreq(data, response){
-  switch (data.origin){
+  var incData = JSON.parse(data);
+  switch (incData.origin){
     case 'trending':
-
+      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",10*incData.loaded, dbReady);
+      function dbReady(err, rows){
+        rows = rows.slice(10*(incData.loaded-1));
+        formatPost(response,err,data, rows);
+      }
       break;
     case 'new':
-
+      db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit ?",10*incData.loaded, dbReady)
+      function dbReady(err, rows){
+        rows = rows.slice(10*(incData.loaded-1));
+        formatPost(response,err,data, rows);
+      }
       break;
     case 'top':
-
+      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",10*incData.loaded, dbReady)
+      function dbReady(err, rows){
+        rows = rows.slice(10*(incData.loaded-1));
+        formatPost(response,err,data, rows);
+      }
       break;
     case 'myUp':
-
+      getmyupost.all([incData.username,10*incData.loaded],gmupostsready);
+      function gmupostsready(err,row){
+        row = row.slice(10*(incData.loaded-1));
+        formatPost(response,err,store,row);
+      }
       break;
     case 'myP':
-
+      getmypost.all([incData.username, incData.prs,10*incData.loaded], gmpostsready);
+      function gmpostsready(err,row){
+        row = row.slice(10*(incData.loaded-1));
+        formatPost(response,err,data,row);
+      }
       break;
   }
 
@@ -545,14 +566,14 @@ function accountSettingsresponse(data, response){
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
   var data = JSON.parse(store);
-  getmypost.all([data.user, data.pstr], gmpostsready);
-  function gmpostsready(err,row){ gmpost2(err,row,response);}
+  getmypost.all([data.username, data.pstr,10], gmpostsready);
+  function gmpostsready(err,row){ formatPost(response,err,store,row);}
 }
 
 function gmupready(store, response){
   var data = JSON.parse(store);
-  getmyupost.all([data.user],gmupostsready);
-  function gmupostsready(err,row){ gmpost2(err,row,response);}
+  getmyupost.all([data.username,10],gmupostsready);
+  function gmupostsready(err,row){ formatPost(response,err,store,row);}
 }
 
 function gmpost2(err,rows,response){
@@ -1063,6 +1084,7 @@ function deliver(response, type, err, content) {
 function formatPost(response, err,myData, rows){
   var incData = JSON.parse(myData);
   var myUsername = incData.username;
+  console.log(myUsername);
   var posts='';
   if (!(rows === undefined)){
     if (!(rows[0] === undefined)){

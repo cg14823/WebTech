@@ -3,6 +3,8 @@
 var lastScroll = 0;
 var sensitivity = 10;
 var loading = false;
+var nextLoad = 2;
+
 $( document ).scroll(infi_scroll)
 
 function infi_scroll(){
@@ -16,31 +18,35 @@ function infi_scroll(){
     if($("#post-wrap").children().length % 10 === 0){
 
       $("#loader-text").attr("class","centeredShow");
-      var loadId = $(".identifer").attr("id");
+      var loadId = $(".identifier").attr("id");
       var posts = $("#post-wrap").children();
       var detail =$($(posts[posts.length-1]).children()[0]).text().split(" ");
+      console.log(loadId);
       switch (loadId){
         case 'trending':
-          var data = {origin:loadId, upvotes:parseInt(detail[2])};
+          var data = {origin:loadId, upvotes:parseInt(detail[2]),loaded:nextLoad,username:usr};
           requestMorePosts(JSON.stringify(data));
           break;
         case 'new':
-          var data = {origin:loadId, timestamp:parseInt(detail[0])};
+          var data = {origin:loadId, timestamp:parseInt(detail[0]),loaded:nextLoad,username:usr};
           requestMorePosts(JSON.stringify(data));
           break;
         case 'top':
-          var data = {origin:loadId, upvotes:parseInt(detail[2])};
+          var data = {origin:loadId, upvotes:parseInt(detail[2]),loaded:nextLoad,username:usr};
           requestMorePosts(JSON.stringify(data));
           break;
         case 'myUp':
-          var data = {origin:loadId, timestamp:parseInt(detail[2]), user:detail[1]};
+          var data = {origin:loadId, timestamp:parseInt(detail[2]), user:detail[1],loaded:nextLoad,username:usr};
           requestMorePosts(JSON.stringify(data));
           break;
         case 'myP':
-          var data = {origin:loadId, user:detail[1]};
+          var data = {origin:loadId, user:detail[1],loaded:nextLoad,username:usr,prs:prsstring};
           requestMorePosts(JSON.stringify(data));
           break;
       }
+    }
+    else {
+      $("#loader-text").text("NO MORE POSTS");
     }
   }
   lastScroll = scrollTop;
@@ -55,7 +61,9 @@ function requestMorePosts(data){
     dataType: "text"
   });
 }
-function loadnewposts(posts){
+function loadnewposts(data){
+  var posts = JSON.parse(data);
   $("#loader-text").attr("class","noShow");
-  $("#post-wrap").append(posts);
+  $("#post-wrap").append(posts.postData);
+  nextLoad++;
 }
