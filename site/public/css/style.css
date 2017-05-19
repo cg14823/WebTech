@@ -125,20 +125,27 @@ textarea{
 
 }
 
+img:hover {
+ cursor:pointer;
+}
+svg@hoverimg:hover {
+ cursor:pointer;
+}
+
 #voted-up{
-  color: blue;
+  stroke: blue;
 }
 
 #voted-down{
-  color: red;
+  stroke: red;
 }
 
 #not-voted-up{
-  color: black;
+  stroke: #b4b4b4;
 }
 
 #not-voted-down{
-  color: black;
+  stroke: #b4b4b4;
 }
 
 #signin-btn{

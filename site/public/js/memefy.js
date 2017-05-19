@@ -8,6 +8,8 @@ function documentready(){
   checkLogged();
 }
 
+
+
 function checkLogged(){
   console.log("CHECKING...");
   if( usr === null || prsstring === null){
@@ -332,10 +334,10 @@ function signUpDone(data){
 
       var usrcookie ="username=" +usr+";"
       var pstrcookie ="pstr=" +prsstring+";"
-      var tomorrow = new Date();
+      var week = new Date();
 
-      tomorrow.setTime(tomorrow.getTime() + 24*60*60*1000);
-      var expireT = "expires="+tomorrow.toUTCString()+";";
+      week.setTime(week.getTime() + 24*60*60*1000 * 7);
+      var expireT = "expires="+week.toUTCString()+";";
 
       document.cookie = usrcookie;
       document.cookie = pstrcookie;
