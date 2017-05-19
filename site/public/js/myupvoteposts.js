@@ -24,7 +24,8 @@ function requestMyposts(){
 
 function loadMyposts(data){
   var posts = JSON.parse(data);
-  $("#mypost-wrap").append(posts.postData);
+  console.log(posts.postData);
+  $("#post-wrap").append(posts.postData);
 }
 
 function checkPersistent(data){
