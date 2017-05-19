@@ -117,7 +117,6 @@ function uploadSuccess(data){
 
 function trending(){
   //checkLogged();
-  nextLoad = 2;
   var data = {username: usr, prs: prsstring};
   var datajson = JSON.stringify(data);
   $.ajax({
@@ -139,7 +138,6 @@ function trending(){
 
 function newTag(){
   //checkLogged();
-  nextLoad = 2;
   var data = {username: usr, prs: prsstring};
   var datajson = JSON.stringify(data);
   $.ajax({
@@ -161,7 +159,6 @@ function newTag(){
 
 function topTag(){
   //checkLogged();
-  nextLoad = 2;
   var data = {username: usr, prs: prsstring};
   var datajson = JSON.stringify(data);
   $.ajax({

@@ -24,6 +24,7 @@ function changesmalldropmenu(){
   $("#upload").empty();
   $("#account-btn").remove();
   $("#dropdown-account").remove();
+  $("#account-list-el").empty();
   $("#account-list-el").append(smallAccount);
   $("#upTag").remove()
   $("#tabs").append(smallUp);
@@ -35,6 +36,7 @@ function changebigdropmenu(){
   $("#upload").append(fullUp);
   $("#dropdown-account").remove();
   $("#account-btn").remove();
+  $("#account-list-el").empty();
   $("#account-list-el").append(fullaccount);
   fullSearch();
 }

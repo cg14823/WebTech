@@ -9,6 +9,8 @@
   <script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
   <script type="text/javascript" src="js/myposts.js"></script>
   <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/responsive-nav.js"></script>
+  <script type="text/javascript" src="js/infinitescroll.js"></script>
 </head>
 <body>
   <nav class="navbar navbar-default">
@@ -53,8 +55,11 @@
     </div>
   </nav>
   <div class="post-wrap" id="no-posts"></div>
-  <div class="post-wrap" id ="post-wrap"></div>
-  <div class="loader"></div>
+  <div class="identifier" id ="myP"></div>
+  <div class="container">
+    <div class="post-wrap" id ="post-wrap"></div>
+    <div class="loader" id ="infiloader"><span id="loader-text" class="noshow">LOADING MORE POSTS...</span></div>
+  </div>
  <!-- SIGN IN MODAL -->
   <div class="modal fade" id="signin-modal" tabindex="-1" role="log in or sign up" aria-labelledby="sign in ">
   <div class="modal-dialog modal-lg" role="document">

@@ -13,6 +13,7 @@
 // privilege issues and port number 80 isn't already in use.
 
 var http = require("http");
+var https = require("https");
 var formidable = require('formidable');
 var util = require('util');
 var fs = require("fs");
@@ -80,12 +81,16 @@ var createCommentStatement = db.prepare("insert into comments (postID, username,
 var searchTagsStatement = "postTags like '%#QUERY#%'";
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
+    var options = {
+      key: fs.readFileSync('key.pem'),
+      cert: fs.readFileSync('cert.pem')
+    };
     types = defineTypes();
     banned = [];
     banUpperCase("./public/", "");
-    var service = http.createServer(handle);
+    var service = https.createServer(options,handle);
     service.listen(port, "localhost");
-    var address = "http://localhost";
+    var address = "https://localhost";
     if (port != 80) address = address + ":" + port;
     console.log("Server running at", address);
 }
@@ -347,37 +352,37 @@ function infinitescrollreq(data, response){
   var incData = JSON.parse(data);
   switch (incData.origin){
     case 'trending':
-      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",10*incData.loaded, dbReady);
+      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",incData.loaded+10, dbReady);
       function dbReady(err, rows){
-        rows = rows.slice(10*(incData.loaded-1));
+        rows = rows.slice(incData.loaded);
         formatPost(response,err,data, rows);
       }
       break;
     case 'new':
-      db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit ?",10*incData.loaded, dbReady)
+      db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit ?",incData.loaded+10, dbReady)
       function dbReady(err, rows){
-        rows = rows.slice(10*(incData.loaded-1));
+        rows = rows.slice(incData.loaded);
         formatPost(response,err,data, rows);
       }
       break;
     case 'top':
-      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",10*incData.loaded, dbReady)
+      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",incData.loaded+10, dbReady)
       function dbReady(err, rows){
-        rows = rows.slice(10*(incData.loaded-1));
+        rows = rows.slice(incData.loaded);
         formatPost(response,err,data, rows);
       }
       break;
     case 'myUp':
-      getmyupost.all([incData.username,10*incData.loaded],gmupostsready);
+      getmyupost.all([incData.username,incData.loaded+10],gmupostsready);
       function gmupostsready(err,row){
-        row = row.slice(10*(incData.loaded-1));
-        formatPost(response,err,store,row);
+        row = row.slice(incData.loaded);
+        formatPost(response,err,data,row);
       }
       break;
     case 'myP':
-      getmypost.all([incData.username, incData.prs,10*incData.loaded], gmpostsready);
+      getmypost.all([incData.username, incData.prs,incData.loaded+10], gmpostsready);
       function gmpostsready(err,row){
-        row = row.slice(10*(incData.loaded-1));
+        row = row.slice(incData.loaded);
         formatPost(response,err,data,row);
       }
       break;
