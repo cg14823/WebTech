@@ -14,7 +14,6 @@ function infi_scroll(){
   if(scrollPercentage > 0.9 && scrollTop > lastScroll && (lastScroll/bodyHeight) < 0.9 && $(".infiloader").length >= 0) {
     //post loaded in 10s so if the number of post is not a mulyiple of ten do not do request
     if($("#post-wrap").children().length % 10 === 0){
-
       $("#loader-text").attr("class","centeredShow");
       var loadId = $(".identifier").attr("id");
       var posts = $("#post-wrap").children();
@@ -44,6 +43,7 @@ function infi_scroll(){
     }
     else {
       $("#loader-text").text("NO MORE POSTS");
+      $("#loader-text").attr("class","centeredShow");
     }
   }
   lastScroll = scrollTop;
@@ -60,6 +60,13 @@ function requestMorePosts(data){
 }
 function loadnewposts(data){
   var posts = JSON.parse(data);
-  $("#loader-text").attr("class","noShow");
-  $("#post-wrap").append(posts.postData);
+  if (posts.postData != ""){
+    $("#loader-text").attr("class","noShow");
+    $("#post-wrap").append(posts.postData);
+  }
+  else {
+    $("#loader-text").text("NO MORE POSTS");
+    $("#loader-text").attr("class","centeredShow");
+  }
+
 }

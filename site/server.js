@@ -12,7 +12,6 @@
 // Start the server: change the port to the default 80, if there are no
 // privilege issues and port number 80 isn't already in use.
 
-var http = require("http");
 var https = require("https");
 var formidable = require('formidable');
 var util = require('util');
@@ -35,6 +34,7 @@ var signinbttn = '<li><button type="button" id="signin-btn" class="btn btn-prima
 
 var OK = 200, NotFound = 404, BadType = 415, Error = 500;
 var types, banned;
+var secondsInDay = 60*60*24*1000;
 start(8080);
 
 
@@ -67,7 +67,7 @@ var deletePostVote = db.prepare("delete from votesPosts where username = ? and p
 var retrieveComment = db.prepare("select * from comments where commentID = ?");
 var retrievePost = db.prepare("select * from posts where postID = ?");
 var updateComment = db.prepare("update comments set comUpvotes = ?,comDownvotes = ? where commentID = ?");
-var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ? where postID = ?");
+var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ?,postNetVotes = ? where postID = ?");
 var checkVotedPost = db.prepare("select * from votesPosts where postID = ? AND username = ?");
 var checkVotedComment = db.prepare("select * from votesComments where commentID = ? AND username = ?");
 
@@ -112,7 +112,7 @@ function handle(request, response) {
           getTrendingPostsReady(store);
         });
         function getTrendingPostsReady(myData){
-          db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady)
+          db.all("select * from posts inner join users on posts.username = users.username order by postNetVotes desc limit 10", dbReady)
           function dbReady(err, rows){ formatPost(response,err,myData, rows); }
         }
         break;
@@ -352,7 +352,7 @@ function infinitescrollreq(data, response){
   var incData = JSON.parse(data);
   switch (incData.origin){
     case 'trending':
-      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",incData.loaded+10, dbReady);
+      db.all("select * from posts inner join users on posts.username = users.username order by postNetVotes desc limit ?",[incData.loaded+10], dbReady);
       function dbReady(err, rows){
         rows = rows.slice(incData.loaded);
         formatPost(response,err,data, rows);
@@ -822,6 +822,7 @@ function accessDBPostVotes(data,response) {
   var voteState = parseInt(incData.voteState);
   var postUps;
   var postDowns;
+  var postNet;
   var change;
   var postTitle;
   checkUser.get([username,prsstring], prsCheck);
@@ -853,11 +854,13 @@ function accessDBPostVotes(data,response) {
       createPostVote.run([username,postID,voteState],errorOccured);
       if (voteState === 1){
         postUps++;
-        updatePost.run([postUps,postDowns,postID],errorOccured);
+        postNet = postUps - postDowns;
+        updatePost.run([postUps,postDowns,postNet,postID],errorOccured);
       }
       else{
         postDowns++;
-        updatePost.run([postUps,postDowns,postID],errorOccured);
+        postNet = postUps - postDowns;
+        updatePost.run([postUps,postDowns,postNet,postID],errorOccured);
       }
     }
     else {
@@ -868,11 +871,13 @@ function accessDBPostVotes(data,response) {
         deletePostVote.run([username,postID],errorOccured);
         if (voteState === 1){
           postUps--;
-          updatePost.run([postUps,postDowns,postID],errorOccured);
+          postNet = postUps - postDowns;
+          updatePost.run([postUps,postDowns,postNet,postID],errorOccured);
         }
         else{
           postDowns--;
-          updatePost.run([postUps,postDowns,postID],errorOccured);
+          postNet = postUps - postDowns;
+          updatePost.run([postUps,postDowns,postNet,postID],errorOccured);
         }
       }
       else {
@@ -882,12 +887,14 @@ function accessDBPostVotes(data,response) {
         if (voteState === 1){
           postUps++;
           postDowns--;
-          updatePost.run([postUps,postDowns,postID],errorOccured);
+          postNet = postUps - postDowns;
+          updatePost.run([postUps,postDowns,postNet,postID],errorOccured);
         }
         else{
           postUps--;
           postDowns++;
-          updatePost.run([postUps,postDowns,postID],errorOccured);
+          postNet = postUps - postDowns;
+          updatePost.run([postUps,postDowns,postNet,postID],errorOccured);
         }
       }
     }
@@ -1089,7 +1096,6 @@ function deliver(response, type, err, content) {
 function formatPost(response, err,myData, rows){
   var incData = JSON.parse(myData);
   var myUsername = incData.username;
-  console.log(myUsername);
   var posts='';
   if (!(rows === undefined)){
     if (!(rows[0] === undefined)){
@@ -1101,6 +1107,14 @@ function formatPost(response, err,myData, rows){
         }
         doOnePost(0,voted);
       });
+    }
+    else {
+      var output = {postData:posts};
+      var outputJson = JSON.stringify(output);
+      var typeHeader = { "Content-Type": "application/json" };
+      response.writeHead(OK, typeHeader);
+      response.write(outputJson);
+      response.end();
     }
   }
   else {
