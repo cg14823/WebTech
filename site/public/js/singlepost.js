@@ -251,7 +251,7 @@ function signout(){
   document.cookie = "expires=Thu, 01 Jan 1970 00:00:01 GMT;";
   document.cookie = "username=;";
   document.cookie = "pstr=;";
-  checkLogged();
+  nouser();
 }
 
 function submitSignUp(){
@@ -297,7 +297,7 @@ function signUpDone(data){
       $("#signin-modal").modal("toggle");
       usr = data.usr;
       prsstring = data.pers;
-      checkLogged();
+      yesuser();
 
       var usrcookie ="username=" +usr+";"
       var pstrcookie ="pstr=" +prsstring+";"
@@ -492,6 +492,21 @@ function uploadSuccess(data){
   }
 }
 
+
+function nouser(){
+  $('#signin-list-el').show();
+  $('#account-list-el').hide();
+  $('#upload-button').prop('disabled', true);
+  $('#new-comment-content').attr('placeholder',"Must be logged in to comment");
+  $('#new-comment-button').prop('disabled', true);
+}
+function yesuser(){
+  $('#signin-list-el').hide();
+  $('#account-list-el').show();
+  $('#upload-button').prop('disabled', false);
+  $('#new-comment-content').attr('placeholder',"Comment here!");
+  $('#new-comment-button').prop('disabled', false);
+}
 function checkLogged(){
   console.log("CHECKING...");
   if( usr === null || prsstring === null){
@@ -510,16 +525,19 @@ function checkLogged(){
       });
     }
     else{
-      $('#account-list-el').hide();
-      $('#signin-list-el').show();
-      $('#upload-button').prop('disabled', true);
+      nouser();
     }
   }
   else{
-    console.log("NO USER");
-    $('#signin-list-el').hide();
-    $('#account-list-el').show();
-    $('#upload-button').prop('disabled', false);
+    var data ={usr:urs, per: prsstring};
+    var datajson = JSON.stringify(data);
+    $.ajax({
+      type:"POST",
+      url:"/persignin",
+      data:datajson,
+      success:checkPersistent,
+      dataType: "json"
+    });
   }
   loadThePage();
 }
@@ -530,10 +548,14 @@ function checkPersistent(data){
     prsstring = data.pers;
     var pstrcookie ="pstr=" +prsstring+";"
     document.cookie = pstrcookie;
-    $('#signin-list-el').hide();
-    $('#account-list-el').show();
-    $('#upload-button').prop('disabled', false);
+    yesuser();
   }
+  else{
+    nouser();
+  }
+
+
+
   loadThePage();
 }
 
