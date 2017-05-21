@@ -121,6 +121,9 @@ textarea{
   padding-bottom: 50px;
 }
 
+#dropdown-filter{
+  float:right;
+}
 
 #customline{
   display: block;
