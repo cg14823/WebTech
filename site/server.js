@@ -21,6 +21,9 @@ var bcrypt = require('bcryptjs');
 var randomstring = require("randomstring");
 var db = new sql.Database("memedatabase.db");
 
+
+// ----------- COMPONENT TEMPLATES ---------------------------------------------
+
 var postTemplate ='<div class="post" id="%postTemplate%"><span class="noshow">%TIMESTAMP% %USERID% %UPVOTES1%</span><div class="row"><a href="\\singlepost.html?p=%POSTID%"><h3>%POSTTITLE%</h3></a></div><div class="row"><span class="post-user">by %USER%</span><span class="post-date"> %DATE%</span></div><div class="row"><a href="\\singlepost.html?p=%POSTID%"><img  class="post-image" id="post-image" src="%source%" alt="%description%"/></a></div><div class="row"><div onclick="votePost(%POSTID%,1)" class="col-xs-5"><div class="col-xs-2"><svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="20" height="20" viewBox="0 0 5.2916665 5.2916665" version="1.1" id="svg5657" inkscape:version="0.92.0 r15299" sodipodi:docname="up-arrow.svg"> <defs id="defs5651" /> <sodipodi:namedview id="base" pagecolor="#ffffff" bordercolor="#666666" borderopacity="1.0" inkscape:pageopacity="0.0" inkscape:pageshadow="2" inkscape:zoom="16" inkscape:cx="35.153593" inkscape:cy="11.226542" inkscape:document-units="mm" inkscape:current-layer="layer1" showgrid="false" units="px" inkscape:window-width="1920" inkscape:window-height="1051" inkscape:window-x="-9" inkscape:window-y="-9" inkscape:window-maximized="1" /> <metadata id="metadata5654"> <rdf:RDF> <cc:Work rdf:about=""> <dc:format>image/svg+xml</dc:format> <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" /> <dc:title /> </cc:Work> </rdf:RDF> </metadata> <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1" transform="translate(0,-291.70833)"> <path id="%VOTEDUP%" style="fill:none;stroke-width:0.26175293px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="m 2.5886638,292.34562 1.7444238,1.91971 m -1.5621014,-1.90993 -1.90011927,1.80073 m 1.73404067,2.2946 v -3.20974" /> </g> </svg> </div><div class="col-xs-2"><span class="votes" id="%UPID%">%UPVOTES%</span></div></div><div onclick="votePost(%POSTID%,-1)" class="col-xs-5"><div class="col-xs-2"><svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="20" height="20" viewBox="0 0 5.2916665 5.2916665" version="1.1" id="svg5657" sodipodi:docname="down-arrow.svg" inkscape:version="0.92.0 r15299"> <defs id="defs5651" /> <sodipodi:namedview id="base" pagecolor="#ffffff" bordercolor="#666666" borderopacity="1.0" inkscape:pageopacity="0.0" inkscape:pageshadow="2" inkscape:zoom="22.627417" inkscape:cx="16.2275" inkscape:cy="7.5005665" inkscape:document-units="mm" inkscape:current-layer="layer1" showgrid="false" units="px" inkscape:window-width="1920" inkscape:window-height="1051" inkscape:window-x="-9" inkscape:window-y="-9" inkscape:window-maximized="1" /> <metadata id="metadata5654"> <rdf:RDF> <cc:Work rdf:about=""> <dc:format>image/svg+xml</dc:format> <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" /> <dc:title /> </cc:Work> </rdf:RDF> </metadata> <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1" transform="translate(0,-291.70833)"> <g id="g6242" transform="rotate(180,2.6019798,294.39818)"> <path id="%VOTEDDOWN%" style="fill:none;stroke-width:0.26175293px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="m 2.5886638,292.34562 c 0.5814746,0.6399 1.1629492,1.27981 1.7444238,1.91971 M 2.7709862,292.3554 c -0.6333731,0.60024 -1.2667462,1.20049 -1.90011927,1.80073 m 1.73404067,2.2946 c 0,-1.06991 0,-2.13983 0,-3.20974" /> </g> </g> </svg> </div><div class="col-xs-2"><span class="votes" id="%DOWNID%">%DOWNVOTES%</span></div></div><a href="\\singlepost.html?p=%POSTID%"><div id="comment-image" class="col-xs-2"><span class="glyphicon glyphicon-comment"></span></div></a></div></div>';
 
 
@@ -28,9 +31,9 @@ var commentTemplate = '<div class="next-comment" id="%commentTemplate%"><div cla
 
 var newCommentTemplate = '<div class="new-comment"><textarea id="new-comment-content" placeholder="Write your comment here..."></textarea><br></br><button type="submit" class="btn btn-default" onclick="createNewComment()">Submit</button></div>'
 
-var accountImage = '<li><a href="#" id="clickableImage"><img src="/images/account.png" alt="account icon" id ="accountIcon" onclick="account()"/></a></li>';
 
 var signinbttn = '<li><button type="button" id="signin-btn" class="btn btn-primary" data-toggle="modal" data-target="#signin-modal">Sign In</button></li>';
+// ----------- COMPONENT TEMPLATES END -----------------------------------------
 
 var OK = 200, NotFound = 404, BadType = 415, Error = 500;
 var types, banned;
@@ -38,13 +41,9 @@ var secondsInDay = 60*60*24*1000;
 start(8080);
 
 
-/* TODO::
-  --------------Isue list--------------------------------
-- loads of comments instead od in batch
-- no check for enourmous request trying to do DoS
-*/
 
-// QUERIES PREPARED STATEMENTS
+
+// --------------------------QUERIES PREPARED STATEMENTS------------------------
 var updatePassword = db.prepare("update users set password = ? where username = ?");
 var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt) values ( ?, ?, ?, ?)");
 var uniqueUserName = db.prepare("select username from users where username=?");
@@ -79,6 +78,9 @@ var insertPost = db.prepare("insert into posts (postTitle, imageFilename, userna
 var createCommentStatement = db.prepare("insert into comments (postID, username, comTimestamp, content) values (?, ?, ?, ?)");
 
 var searchTagsStatement = "postTags like '%#QUERY#%'";
+
+// --------------------------QUERIES PREPARED STATEMENTS------------------------
+
 // Start the http service.  Accept only requests from localhost, for security.
 function start(port) {
     var options = {
@@ -98,7 +100,8 @@ function start(port) {
 // Serve a request by delivering a file.
 function handle(request, response) {
     var url = request.url.toLowerCase();
-    function dbReady(err, rows){ formatPost(response,err, rows); }
+
+    // switch for different requests
     switch (url) {
       case '/trending':
         //load trending page
@@ -150,12 +153,9 @@ function handle(request, response) {
           function dbReady(err, rows){ formatPost(response,err,myData, rows); }
         }
         break;
-      case '/?':
-        // search
-        break;
 
       case '/signup':
-        //does signup maybe change to use formidable????
+        //does signup
         var store = '';
         request.on('data', function(data)
         {
@@ -183,6 +183,7 @@ function handle(request, response) {
         break;
 
       case '/persignin':
+        // checks persistent login
         var store = '';
         request.on('data', function(data)
         {
@@ -196,6 +197,7 @@ function handle(request, response) {
         break;
 
       case '/singlepost':
+        // load single post
         var store = '';
         request.on('data', function(data)
         {
@@ -218,12 +220,8 @@ function handle(request, response) {
         function uploadReady(err, fields, files) { upload_step1(err, fields, files,response);}
         break;
 
-      case '/post':
-        db.all("select * from posts inner join users on posts.username = users.username where postID = ?",postID, getPost)
-        function getPost(err, row){ putPost(response,err, row); }
-        break;
-
       case '/comments':
+      // load comments
         var store = '';
         request.on('data', function(data)
         {
@@ -236,7 +234,7 @@ function handle(request, response) {
         function commentReady() {accessDBComments(store,response);}
         break;
       case '/change-password':
-        console.log("Request received");
+        // password change
         var store = '';
         request.on('data', function(data)
         {
@@ -248,6 +246,7 @@ function handle(request, response) {
         });
         break;
       case '/commentvote':
+        // voted on comment
         var store = '';
         request.on('data', function(data)
         {
@@ -260,6 +259,7 @@ function handle(request, response) {
         break;
 
       case '/postvote':
+        // voted on post
         var store = '';
         request.on('data', function(data)
         {
@@ -271,7 +271,7 @@ function handle(request, response) {
         });
         break;
       case '/getmyposts':
-        console.log("Received");
+        // Retrieve users posts
         var store = '';
         request.on('data', function(data)
         {
@@ -283,7 +283,8 @@ function handle(request, response) {
         });
         break;
       case '/getmyupvoteposts':
-        console.log("Received");
+
+        // retireve users upvoted posts
         var store = '';
         request.on('data', function(data)
         {
@@ -295,7 +296,7 @@ function handle(request, response) {
         });
         break;
       case '/createcomment':
-        console.log("Received");
+        // create comment
         var store = '';
         request.on('data', function(data)
         {
@@ -307,7 +308,7 @@ function handle(request, response) {
         });
         break;
       case '/search':
-        console.log("Received");
+        // search for data
         var store = '';
         request.on('data', function(data)
         {
@@ -320,7 +321,8 @@ function handle(request, response) {
         break;
 
       case '/infiscroll-request':
-      var store = '';
+        // load more data to append to the infinite scroll
+        var store = '';
         request.on('data', function(data)
         {
           store += data;
@@ -332,6 +334,7 @@ function handle(request, response) {
         break;
 
       default:
+        // default loading of files (original server code)
         if (url.includes("?")){
           var qMark = url.indexOf("?");
           url = url.substring(0,qMark);
@@ -392,7 +395,7 @@ function infinitescrollreq(data, response){
 }
 
 
-//----- INFINITE SCROLL end
+//----- INFINITE SCROLL END
 
 
 // --Create Comment
@@ -461,8 +464,9 @@ function searchReady(store,response){
   function getResults(err,rows) {formatPost(response, err, store, rows);}
 }
 
-// --------- ACOUNT STUFF --------------------------
+// --------- Password change  --------------------------
 
+// check passwords match and retrieve user information
 function accountSettingsSignIn(store, response){
   console.log("Request started");
   var data = JSON.parse(store);
@@ -498,6 +502,7 @@ function checkPasswords(og, p1,p2){
   return true;
 }
 
+// if user exists hash passowrd send by client so we can check if it macthes to hash in server
 function accountSettings2(err, row, data,response){
   console.log(err);
   if(err === null){
@@ -630,17 +635,17 @@ function textResponse(data,response){
   response.end();
 }
 
-
-
-
 // LOAD my posts end --------------------------------
-// persistentLogin check
+
+// ---------persistent login check
+// check if there is a row with the user and the persisten login string
 function persReady(store, response){
   var userData = JSON.parse(store);
   checkUser.get([userData.usr,userData.per],checkUserReady);
   function checkUserReady(err,row){ check_user_pers(err,row,userData,response);}
 }
 
+// if row exists then its a valid sign up
 function check_user_pers(err,row,data,response){
   if(err === null && row != undefined){
     if(row.persistentLogin === data.per){
@@ -654,11 +659,11 @@ function check_user_pers(err,row,data,response){
     submitionError(1,response);
   }
 }
+///------------------------------- END pers login check
 
-
-/// END pers login check
 // -------------------------------------- UPLOAD CODE -------------------------
 
+// check data send from client is valid (user and post)
 function upload_step1(err, fields, files,response){
   if (err === null){
     if(fields.title.length > 40){
@@ -672,7 +677,7 @@ function upload_step1(err, fields, files,response){
     submitionError(10,response);
   }
 }
-
+// check if its a valid user by checking the persistent login string
 function check_user_step1(err,row,fields, files,response){
   if(err === null && row != undefined){
     if(row.persistentLogin === fields.pstr){
@@ -686,7 +691,7 @@ function check_user_step1(err,row,fields, files,response){
     submitionError(1,response);
   }
 }
-
+// add the post to the database
 function upload_step2(fields, files,response){
   var filePath = files.image.path.slice(files.image.path.indexOf('memes'));
   var postTitleList = fields.title.split(" ");
@@ -703,6 +708,7 @@ function upload_step2(fields, files,response){
   function insertPostReady(err){ upload_step3(err,fields,response);}
 }
 
+// send acknowledgnment
 function upload_step3(err,fields,response){
   if(err === null){
     submitionError(0,response);
@@ -1067,32 +1073,6 @@ function submitionError (errorCode, response){
 
 
 
-// Forbid any resources which shouldn't be delivered to the browser.
-function isBanned(url) {
-    for (var i=0; i<banned.length; i++) {
-        var b = banned[i];
-        if (url.startsWith(b)) return true;
-    }
-    return false;
-}
-
-function progress(){}
-// Find the content type to respond with, or undefined.
-function findType(url) {
-    var dot = url.lastIndexOf(".");
-    var extension = url.substring(dot + 1);
-    return types[extension];
-}
-
-// Deliver the file that has been read in to the browser.
-function deliver(response, type, err, content) {
-    if (err) return fail(response, NotFound, "File not found");
-    var typeHeader = { "Content-Type": type };
-    response.writeHead(OK, typeHeader);
-    response.write(content);
-    response.end();
-}
-
 function formatPost(response, err,myData, rows){
   var incData = JSON.parse(myData);
   var myUsername = incData.username;
@@ -1290,10 +1270,36 @@ function putComments(response,username, err, rows){
       });
     }
   }
-
-
-
 }
+
+
+// Forbid any resources which shouldn't be delivered to the browser.
+function isBanned(url) {
+    for (var i=0; i<banned.length; i++) {
+        var b = banned[i];
+        if (url.startsWith(b)) return true;
+    }
+    return false;
+}
+
+function progress(){}
+// Find the content type to respond with, or undefined.
+function findType(url) {
+    var dot = url.lastIndexOf(".");
+    var extension = url.substring(dot + 1);
+    return types[extension];
+}
+
+// Deliver the file that has been read in to the browser.
+function deliver(response, type, err, content) {
+    if (err) return fail(response, NotFound, "File not found");
+    var typeHeader = { "Content-Type": type };
+    response.writeHead(OK, typeHeader);
+    response.write(content);
+    response.end();
+}
+
+
 
 
 // Give a minimal failure response to the browser
