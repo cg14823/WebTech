@@ -376,12 +376,14 @@ function infinitescrollreq(data, response){
       }
       break;
     case 'myUp':
+      getmyupost.all([incData.username,incData.filter+" "+incData.ascendOrDescend,incData.loaded+10],gmupostsready);
       function gmupostsready(err,row){
         row = row.slice(incData.loaded);
         formatPost(response,err,data,row);
       }
       break;
     case 'myP':
+      getmypost.all([incData.username, incData.prs,incData.filter+" "+incData.ascendOrDescend,incData.loaded+10], gmpostsready);
       function gmpostsready(err,row){
         row = row.slice(incData.loaded);
         formatPost(response,err,data,row);
@@ -574,11 +576,13 @@ function accountSettingsresponse(data, response){
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
   var data = JSON.parse(store);
+  getmypost.all([data.username, data.pstr,data.filter+" "+data.ascendOrDescend,10], gmpostsready);
   function gmpostsready(err,row){ formatPost(response,err,store,row);}
 }
 
 function gmupready(store, response){
   var data = JSON.parse(store);
+  getmyupost.all([data.username,data.filter+" "+data.ascendOrDescend,10],gmupostsready);
   function gmupostsready(err,row){ formatPost(response,err,store,row);}
 }
 
