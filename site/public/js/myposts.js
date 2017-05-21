@@ -10,9 +10,23 @@ function documentready(){
   checkLogged();
 }
 
+function filter_changed(){
+  var val = $("#filter").val();
+  $("#post-wrap").empty();
+  var datajson = JSON.stringify({username:usr, pstr:prsstring,filter:val});
+  $.ajax({
+    type:"POST",
+    url:"/getmyposts",
+    data:datajson,
+    success:loadMyposts,
+    dataType: "text"
+  });
+}
+
 function requestMyposts(){
   console.log("REQUESTING");
-  var datajson = JSON.stringify({username:usr, pstr:prsstring,filter:"postTimestamp",ascendOrDescend:"desc"});
+  var val = $("#filter").val();
+  var datajson = JSON.stringify({username:usr, pstr:prsstring,filter:val});
   $.ajax({
     type:"POST",
     url:"/getmyposts",

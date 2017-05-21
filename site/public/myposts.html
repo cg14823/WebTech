@@ -4,7 +4,7 @@
   <title>Memefy</title>
   <meta charset="UTF-8"/>
   <link rel="stylesheet" href="css/style.css"/>
-  <link href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css?family=Baloo" rel="stylesheet"/>
   <link rel="stylesheet" href="css/bootstrap.min.css"/>
   <script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
   <script type="text/javascript" src="js/bootstrap.min.js"></script>
@@ -54,17 +54,19 @@
       </div>
     </div>
   </nav>
+  <div class="post-wrap" id="title-left"><h2>My Posts</h2></div>
   <div class="filter">
     <span>Filter:</span>
-    <select id="filter" class="select-lightblue" onclick="filter_changed()">
-      <option value="Recent">Recent</option>
-      <option value="oldest">Oldest</option>
-      <option value="upvotes">Upvotes</option>
+    <select id="filter" class="select-lightblue" onchange="filter_changed()">
+      <option value="R">Recent</option>
+      <option value="O">Oldest</option>
+      <option value="U">Upvotes</option>
     </select>
   </div>
   <div class="post-wrap" id="no-posts"></div>
   <div class="identifier" id ="myP"></div>
   <div class="container">
+
     <div class="post-wrap" id ="post-wrap"></div>
     <div class="loader" id ="infiloader"><span id="loader-text" class="noshow">LOADING MORE POSTS...</span></div>
   </div>

@@ -70,12 +70,16 @@ var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ?,
 var checkVotedPost = db.prepare("select * from votesPosts where postID = ? AND username = ?");
 var checkVotedComment = db.prepare("select * from votesComments where commentID = ? AND username = ?");
 
-var getmypost = db.prepare("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by ? limit ?");
-var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by ? limit ?");
+var getmypost = db.prepare("select * from users inner join posts on users.username = posts.postUsername where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit ?");
+var getmypost2 = db.prepare("select * from users inner join posts on users.username = posts.postUsername where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp ASC limit ?");
+var getmypost3 = db.prepare("select * from users inner join posts on users.username = posts.postUsername where users.username = ? and users.persistentLogin = ? order by posts.postUpvotes DESC limit ?");
+var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit ?");
+var getmyupost2 = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp ASC limit ?");
+var getmyupost3 = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postUpvotes DESC limit ?");
 
-var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp, postTags) values (?, ?, ?, ?, ?)");
+var insertPost = db.prepare("insert into posts (postTitle, imageFilename, postUsername, postTimestamp, postTags) values (?, ?, ?, ?, ?)");
 
-var createCommentStatement = db.prepare("insert into comments (postID, username, comTimestamp, content) values (?, ?, ?, ?)");
+var createCommentStatement = db.prepare("insert into comments (postID, comUsername, comTimestamp, content) values (?, ?, ?, ?)");
 
 var searchTagsStatement = "postTags like '%#QUERY#%'";
 
@@ -115,7 +119,7 @@ function handle(request, response) {
           getTrendingPostsReady(store);
         });
         function getTrendingPostsReady(myData){
-          db.all("select * from posts inner join users on posts.username = users.username order by postNetVotes desc limit 10", dbReady)
+          db.all("select * from posts inner join users on posts.postUsername = users.username order by postNetVotes desc limit 10", dbReady)
           function dbReady(err, rows){ formatPost(response,err,myData, rows); }
         }
         break;
@@ -132,7 +136,7 @@ function handle(request, response) {
           getNewPostsReady(store);
         });
         function getNewPostsReady(myData){
-          db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit 10", dbReady)
+          db.all("select * from posts inner join users on posts.postUsername = users.username order by postID desc limit 10", dbReady)
           function dbReady(err, rows){ formatPost(response,err,myData, rows); }
         }
         break;
@@ -149,7 +153,7 @@ function handle(request, response) {
           getTopPostsReady(store);
         });
         function getTopPostsReady(myData){
-          db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit 10", dbReady)
+          db.all("select * from posts inner join users on posts.postUsername = users.username order by postUpvotes desc limit 10", dbReady)
           function dbReady(err, rows){ formatPost(response,err,myData, rows); }
         }
         break;
@@ -355,35 +359,55 @@ function infinitescrollreq(data, response){
   var incData = JSON.parse(data);
   switch (incData.origin){
     case 'trending':
-      db.all("select * from posts inner join users on posts.username = users.username order by postNetVotes desc limit ?",[incData.loaded+10], dbReady);
+      db.all("select * from posts inner join users on posts.postUsername = users.username order by postNetVotes desc limit ?",[incData.loaded+10], dbReady);
       function dbReady(err, rows){
         rows = rows.slice(incData.loaded);
         formatPost(response,err,data, rows);
       }
       break;
     case 'new':
-      db.all("select * from posts inner join users on posts.username = users.username order by postID desc limit ?",incData.loaded+10, dbReady)
+      db.all("select * from posts inner join users on posts.postUsername = users.username order by postID desc limit ?",incData.loaded+10, dbReady)
       function dbReady(err, rows){
         rows = rows.slice(incData.loaded);
         formatPost(response,err,data, rows);
       }
       break;
     case 'top':
-      db.all("select * from posts inner join users on posts.username = users.username order by postUpvotes desc limit ?",incData.loaded+10, dbReady)
+      db.all("select * from posts inner join users on posts.postUsername = users.username order by postUpvotes desc limit ?",incData.loaded+10, dbReady)
       function dbReady(err, rows){
         rows = rows.slice(incData.loaded);
         formatPost(response,err,data, rows);
       }
       break;
     case 'myUp':
-      getmyupost.all([incData.username,incData.filter+" "+incData.ascendOrDescend,incData.loaded+10],gmupostsready);
+      switch (incData.filter){
+        case "R":
+          getmyupost.all([incData.username,incData.loaded+10], gmupostsready);
+          break;
+        case "O":
+          getmyupost2.all([incData.username,incData.loaded+10], gmupostsready);
+          break;
+        case "U":
+          getmyupost3.all([incData.username,incData.loaded+10], gmupostsready);
+          break;
+      }
       function gmupostsready(err,row){
         row = row.slice(incData.loaded);
         formatPost(response,err,data,row);
       }
       break;
     case 'myP':
-      getmypost.all([incData.username, incData.prs,incData.filter+" "+incData.ascendOrDescend,incData.loaded+10], gmpostsready);
+      switch (incData.filter){
+        case "R":
+          getmypost.all([incData.username, incData.pstr,incData.loaded+10], gmpostsready);
+          break;
+        case "O":
+          getmypost2.all([incData.username, incData.pstr,incData.loaded+10], gmpostsready);
+          break;
+        case "U":
+          getmypost3.all([incData.username, incData.pstr,incData.loaded+10], gmpostsready);
+          break;
+      }
       function gmpostsready(err,row){
         row = row.slice(incData.loaded);
         formatPost(response,err,data,row);
@@ -428,7 +452,7 @@ function addCommentStart(err,row,response){
 
 function addCommentToPage(err,row,response){
   var comments = '';
-  var filledComment = commentTemplate.replace("%USER%",row.username);
+  var filledComment = commentTemplate.replace("%USER%",row.comUsername);
   var date = (new Date(row.comTimestamp)).toString();
   filledComment = filledComment.replace("%DATE%",date.substring(4,24));
   filledComment = filledComment.replace("%CONTENT%",row.content);
@@ -576,13 +600,33 @@ function accountSettingsresponse(data, response){
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
   var data = JSON.parse(store);
-  getmypost.all([data.username, data.pstr,data.filter+" "+data.ascendOrDescend,10], gmpostsready);
+  switch (data.filter){
+    case "R":
+      getmypost.all([data.username, data.pstr,10], gmpostsready);
+      break;
+    case "O":
+      getmypost2.all([data.username, data.pstr,10], gmpostsready);
+      break;
+    case "U":
+      getmypost3.all([data.username, data.pstr,10], gmpostsready);
+      break;
+  }
   function gmpostsready(err,row){ formatPost(response,err,store,row);}
 }
 
 function gmupready(store, response){
   var data = JSON.parse(store);
-  getmyupost.all([data.username,data.filter+" "+data.ascendOrDescend,10],gmupostsready);
+  switch (data.filter){
+    case "R":
+      getmyupost.all([data.username,10], gmupostsready);
+      break;
+    case "O":
+      getmyupost2.all([data.username,10], gmupostsready);
+      break;
+    case "U":
+      getmyupost3.all([data.username,10], gmupostsready);
+      break;
+  }
   function gmupostsready(err,row){ formatPost(response,err,store,row);}
 }
 
@@ -601,8 +645,8 @@ function gmpost2(err,rows,response){
         filledPost = filledPost.replace("%UPVOTES%",rows[i].postUpvotes);
         filledPost = filledPost.replace("%UPVOTES1%",rows[i].postUpvotes);
         filledPost = filledPost.replace("%DOWNVOTES%",rows[i].postDownvotes);
-        filledPost = filledPost.replace("%USER%",rows[i].username);
-        filledPost = filledPost.replace("%USERID%",rows[i].username);
+        filledPost = filledPost.replace("%USER%",rows[i].postUsername);
+        filledPost = filledPost.replace("%USERID%",rows[i].postUsername);
         filledPost = filledPost.replace("%POSTID%",rows[i].postID);
         filledPost = filledPost.replace("%POSTID%",rows[i].postID);
         filledPost = filledPost.replace("%UPID%","postup" + rows[i].postID);
@@ -1077,6 +1121,7 @@ function submitionError (errorCode, response){
 
 function formatPost(response, err,myData, rows){
   var incData = JSON.parse(myData);
+  console.log(rows);
   var myUsername = incData.username;
   var posts='';
   if (!(rows === undefined)){
@@ -1119,8 +1164,8 @@ function formatPost(response, err,myData, rows){
     filledPost = filledPost.replace("%UPVOTES%",rows[index].postUpvotes);
     filledPost = filledPost.replace("%UPVOTES1%",rows[index].postUpvotes);
     filledPost = filledPost.replace("%DOWNVOTES%",rows[index].postDownvotes);
-    filledPost = filledPost.replace("%USER%",rows[index].username);
-    filledPost = filledPost.replace("%USERID%",rows[index].username);
+    filledPost = filledPost.replace("%USER%",rows[index].postUsername);
+    filledPost = filledPost.replace("%USERID%",rows[index].postUsername);
     filledPost = filledPost.replace("%POSTID%",rows[index].postID);
     filledPost = filledPost.replace("%POSTID%",rows[index].postID);
     filledPost = filledPost.replace("%POSTID%",rows[index].postID);
@@ -1183,7 +1228,7 @@ function putPost(row,postID,username, response, err){
     filledPost = filledPost.replace("%DATE%",date.substring(4,21));
     filledPost = filledPost.replace("%UPVOTES%",row.postUpvotes);
     filledPost = filledPost.replace("%DOWNVOTES%",row.postDownvotes);
-    filledPost = filledPost.replace("%USER%",row.username);
+    filledPost = filledPost.replace("%USER%",row.postUsername);
     filledPost = filledPost.replace("%POSTID%",row.postID);
     filledPost = filledPost.replace("%POSTID%",row.postID);
     filledPost = filledPost.replace("%POSTID%",row.postID);
@@ -1230,7 +1275,7 @@ function putComments(response,username, err, rows){
     response.end();
   }
   function doOneComment(index,voted){
-    var filledComment = commentTemplate.replace("%USER%",rows[index].username);
+    var filledComment = commentTemplate.replace("%USER%",rows[index].comUsername);
     var date = (new Date(rows[index].comTimestamp)).toString();
     filledComment = filledComment.replace("%DATE%",date.substring(4,24));
     filledComment = filledComment.replace("%CONTENT%",rows[index].content);

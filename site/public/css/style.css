@@ -9,6 +9,11 @@
   max-width: 500px;
 }
 
+#title-left{
+  font-family: "Baloo";
+  font-size: 20px;
+}
+
 .search-form{
   width:75%;
   padding-right: 0px;
