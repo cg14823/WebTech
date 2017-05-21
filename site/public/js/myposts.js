@@ -12,7 +12,7 @@ function documentready(){
 
 function requestMyposts(){
   console.log("REQUESTING");
-  var datajson = JSON.stringify({username:usr, pstr:prsstring});
+  var datajson = JSON.stringify({username:usr, pstr:prsstring,filter:"postTimestamp",ascendOrDescend:"desc"});
   $.ajax({
     type:"POST",
     url:"/getmyposts",

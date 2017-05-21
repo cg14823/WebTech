@@ -32,11 +32,51 @@ function infi_scroll(){
           requestMorePosts(JSON.stringify(data));
           break;
         case 'myUp':
-          var data = {origin:loadId, timestamp:parseInt(detail[2]), user:detail[1],loaded:$("#post-wrap").children().length,username:usr};
+          var postFilter = "";
+          var ascOrDesc = "";
+          switch (inFilter) {
+            case "R":
+              postFilter = "postTimestamp";
+              ascOrDesc = "desc";
+              break;
+            case "O":
+              postFilter = "postTimestamp";
+              ascOrDesc = "asc";
+              break;
+            case "U":
+              postFilter = "postUpvotes";
+              ascOrDesc = "desc";
+              break;
+            default:
+              postFilter = "postTimestamp";
+              ascOrDesc = "desc";
+              break;
+          }
+          var data = {origin:loadId, timestamp:parseInt(detail[2]), user:detail[1],loaded:$("#post-wrap").children().length,username:usr,filter:postFilter,ascendOrDescend:ascOrDesc};
           requestMorePosts(JSON.stringify(data));
           break;
         case 'myP':
-          var data = {origin:loadId, user:detail[1],loaded:$("#post-wrap").children().length,username:usr,prs:prsstring};
+          var postFilter = "";
+          var ascOrDesc = "";
+          switch (inFilter) {
+            case "R":
+              postFilter = "postTimestamp";
+              ascOrDesc = "desc";
+              break;
+            case "O":
+              postFilter = "postTimestamp";
+              ascOrDesc = "asc";
+              break;
+            case "U":
+              postFilter = "postUpvotes";
+              ascOrDesc = "desc";
+              break;
+            default:
+              postFilter = "postTimestamp";
+              ascOrDesc = "desc";
+              break;
+          }
+          var data = {origin:loadId, user:detail[1],loaded:$("#post-wrap").children().length,username:usr,prs:prsstring,filter:postFilter,ascendOrDescend:ascOrDesc};
           requestMorePosts(JSON.stringify(data));
           break;
       }

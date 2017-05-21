@@ -27,7 +27,6 @@ function changePassword(){
   var p2 = $("#cp-input").val();
   var err = checkPasswords(ogpassword,p1,p2);
   if (err === "<p></p>" && usr != null){
-    console.log("Here2");
     var data = {usr: usr, oldpd: ogpassword, p1:p1,p2:p2};
     var datajson = JSON.stringify(data);
     $("#sign-up-error").empty();
@@ -38,10 +37,10 @@ function changePassword(){
       success: passwordChangeDone,
       dataType: "json"
     });
-    console.log("password change request sent");
+    $(".error-box").empty();
   }
   else{
-    $(".error-box").clear();
+    $(".error-box").empty();
     $(".error-box").append(err);
   }
 
@@ -53,10 +52,10 @@ function checkPasswords(og, p1,p2){
     if(p1 != og){
       if(p1.length > 20 || p1.length < 8){
 
-        err_message.concat("Password must be between 8-20 characters.");
+        return "<p>Password must be between 8-20 characters.</p>";
       }
       else if (!(/\d/.test(p1)) || !(/[a-zA-Z]/.test(p1))) {
-        err_message.concat("Password must contain at least one letter and one number. ");
+        return "<p>Password must contain at least one letter and one number.</p>";
       }
     }
     else{

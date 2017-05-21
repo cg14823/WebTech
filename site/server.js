@@ -70,8 +70,8 @@ var updatePost = db.prepare("update posts set postUpvotes = ?,postDownvotes = ?,
 var checkVotedPost = db.prepare("select * from votesPosts where postID = ? AND username = ?");
 var checkVotedComment = db.prepare("select * from votesComments where commentID = ? AND username = ?");
 
-var getmypost = db.prepare("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by posts.postTimestamp DESC limit ?");
-var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by posts.postTimestamp DESC limit ?");
+var getmypost = db.prepare("select * from users inner join posts on users.username = posts.username where users.username = ? and users.persistentLogin = ? order by ? limit ?");
+var getmyupost = db.prepare("select * from posts inner join votesPosts on posts.postID = votesPosts.postID where votesPosts.username = ? and votesPosts.voteState = 1 order by ? limit ?");
 
 var insertPost = db.prepare("insert into posts (postTitle, imageFilename, username, postTimestamp, postTags) values (?, ?, ?, ?, ?)");
 
@@ -376,14 +376,12 @@ function infinitescrollreq(data, response){
       }
       break;
     case 'myUp':
-      getmyupost.all([incData.username,incData.loaded+10],gmupostsready);
       function gmupostsready(err,row){
         row = row.slice(incData.loaded);
         formatPost(response,err,data,row);
       }
       break;
     case 'myP':
-      getmypost.all([incData.username, incData.prs,incData.loaded+10], gmpostsready);
       function gmpostsready(err,row){
         row = row.slice(incData.loaded);
         formatPost(response,err,data,row);
@@ -476,7 +474,7 @@ function accountSettingsSignIn(store, response){
   }
   else{
     var dataresponse = {error_code: 14, err:"<p>Password must be between 8-20 character. Password must contain characters and numbers. Make sure passwords match and that your old password is correct.</p>"};
-    accountSettingsresponse(error_code);
+    accountSettingsresponse(dataresponse,response);
   }
 }
 
@@ -576,13 +574,11 @@ function accountSettingsresponse(data, response){
 // --Load my posts-----------------------------------------
 function gmpready(store, response){
   var data = JSON.parse(store);
-  getmypost.all([data.username, data.pstr,10], gmpostsready);
   function gmpostsready(err,row){ formatPost(response,err,store,row);}
 }
 
 function gmupready(store, response){
   var data = JSON.parse(store);
-  getmyupost.all([data.username,10],gmupostsready);
   function gmupostsready(err,row){ formatPost(response,err,store,row);}
 }
 

@@ -198,6 +198,9 @@ function votePost(mypostID,vote){
       dataType: "text"
     });
   }
+  else {
+    $('#signin-modal').modal('show')
+  }
 }
 
 function updatePostVotes(data){
