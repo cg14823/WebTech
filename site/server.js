@@ -47,7 +47,7 @@ start(8080);
 var updatePassword = db.prepare("update users set password = ? where username = ?");
 var signUpInsert = db.prepare("insert into users (username, userEmail, password, salt) values ( ?, ?, ?, ?)");
 var uniqueUserName = db.prepare("select username from users where username=?");
-var uniqueEmailName = db.prepare("select userEmail from users where userEmail =?");
+var uniqueEmailName = db.prepare("select * from users where userEmail =?");
 var addpers = db.prepare("update users set persistentlogin=? where username=?");
 var signin_query = db.prepare("select password, salt from users where username=?");
 
@@ -960,8 +960,9 @@ function sigIn_hashcompare(err, hash, dbhash, data, response){
 // ----------------------------------------------------------------------------
 function sign_up(store, response){
   var data = JSON.parse(store);
-  var verErrors = userDataVerify(data);
-  if( verErrors === 0){
+  var varErrors = userDataVerify(data);
+
+  if( varErrors === 0){
     var salt = bcrypt.genSalt(12, saltready);
     function saltready(err, salt){ hashpwd(response, data, salt);}
   }
@@ -1001,7 +1002,7 @@ function usrCheck(response, data, hash, salt){
 function usrCheck1(err, row, data, hash, salt, response){
   if (err === null){
     if (row === undefined){
-      uniqueEmailName.run([data.mail], ready);
+      uniqueEmailName.all([data.mail], ready);
       function ready(error, erow) { emailCheck(error, erow, data, hash, salt, response); }
     }
     else{
@@ -1016,6 +1017,7 @@ function usrCheck1(err, row, data, hash, salt, response){
 function emailCheck (err, row, data, hash, salt, response){
   if (err === null){
     if (row === undefined){
+      console.log(row);
       submitSignUp(response, data, hash, salt);
     }
     else{
