@@ -54,6 +54,14 @@
       </div>
     </div>
   </nav>
+  <div class="filter">
+    <span>Filter:</span>
+    <select id="filter" class="select-lightblue" onclick="filter_changed()">
+      <option value="Recent">Recent</option>
+      <option value="oldest">Oldest</option>
+      <option value="upvotes">Upvotes</option>
+    </select>
+  </div>
   <div class="post-wrap" id="no-posts"></div>
   <div class="identifier" id ="myUp"></div>
   <div class="container">

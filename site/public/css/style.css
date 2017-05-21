@@ -121,10 +121,15 @@ textarea{
   padding-bottom: 50px;
 }
 
-#dropdown-filter{
+.filter{
   float:right;
+  margin-right: 15px;
 }
 
+.select-lightblue{
+  color: rgb(43, 160, 217);
+  border-style: none;
+}
 #customline{
   display: block;
   height: 2px;

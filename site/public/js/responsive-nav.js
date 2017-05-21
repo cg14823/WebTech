@@ -7,7 +7,7 @@ function beresponsivem8(){
   var width = $(document).width();
   if (width < 750){ change2logo(); changesmalldropmenu();}
   else if (width < 920) {change2logo();changebigdropmenu();}
-  if (width > 920) bigscreen();
+  else if (width >= 920) bigscreen();
 
 
 }
@@ -29,6 +29,7 @@ function changesmalldropmenu(){
   $("#upTag").remove()
   $("#tabs").append(smallUp);
   inlineSearch();
+  console.log("HERE!!!");
 }
 function changebigdropmenu(){
   $("#upTag").remove();
