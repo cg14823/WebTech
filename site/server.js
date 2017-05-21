@@ -792,14 +792,7 @@ function accessDBComVotes(data,response) {
   checkUser.get([username,prsstring], prsCheck);
   function prsCheck(err,row){
     if (!(row === undefined)){
-      console.log("SUCCESS :: " + commentID);
       retrieveComment.get([commentID],getCommentData);
-    }
-    else {
-      console.log("FAIL");
-      console.log(row);
-      console.log(prsstring);
-      console.log(username);
     }
   }
   function getCommentData(err,row){
@@ -812,7 +805,6 @@ function accessDBComVotes(data,response) {
   }
   function getComVotes(err, row){
     if (row === undefined){
-      console.log("Undefined, Creating new entry...");
       change = "create";
       createComVote.run([username,commentID,voteState],errorOccured);
       if (voteState === 1){
@@ -825,10 +817,8 @@ function accessDBComVotes(data,response) {
       }
     }
     else {
-      console.log("Defined");
       if (row.voteState === voteState){
         change = "delete";
-        console.log("Deleting entry...")
         deleteComVote.run([username,commentID],errorOccured);
         if (voteState === 1){
           comUps--;
@@ -841,7 +831,6 @@ function accessDBComVotes(data,response) {
       }
       else {
         change = "update";
-        console.log("Updating entry...")
         updateComVote.run([voteState,username,commentID],errorOccured);
         if (voteState === 1){
           comUps++;
@@ -878,14 +867,7 @@ function accessDBPostVotes(data,response) {
   checkUser.get([username,prsstring], prsCheck);
   function prsCheck(err,row){
     if (row != undefined){
-      console.log("SUCCESS :: " + postID);
       retrievePost.get([postID],getPostData);
-    }
-    else {
-      console.log("FAIL");
-      console.log(row);
-      console.log(prsstring);
-      console.log(username);
     }
   }
   function getPostData(err,row){
@@ -899,7 +881,6 @@ function accessDBPostVotes(data,response) {
   }
   function getPostVotes(err, row){
     if (row === undefined){
-      console.log("Undefined, Creating new entry...");
       change = "create";
       createPostVote.run([username,postID,voteState],errorOccured);
       if (voteState === 1){
@@ -914,9 +895,7 @@ function accessDBPostVotes(data,response) {
       }
     }
     else {
-      console.log("Defined");
       if (row.voteState === voteState){
-        console.log("Deleting entry...")
         change = "delete";
         deletePostVote.run([username,postID],errorOccured);
         if (voteState === 1){
@@ -931,7 +910,6 @@ function accessDBPostVotes(data,response) {
         }
       }
       else {
-        console.log("Updating entry...")
         change = "update";
         updatePostVote.run([voteState,username,postID],errorOccured);
         if (voteState === 1){
@@ -1121,7 +1099,6 @@ function submitionError (errorCode, response){
 
 function formatPost(response, err,myData, rows){
   var incData = JSON.parse(myData);
-  console.log(rows);
   var myUsername = incData.username;
   var posts='';
   if (!(rows === undefined)){
