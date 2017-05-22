@@ -6,6 +6,7 @@ var searchQuery = null;
 var loaded = false;
 
 function documentready(searchText){
+  console.log("search");
   $('#account-list-el').hide();
   searchQuery = searchText;
   checkLogged();

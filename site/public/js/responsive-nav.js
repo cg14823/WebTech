@@ -29,7 +29,6 @@ function changesmalldropmenu(){
   $("#upTag").remove()
   $("#tabs").append(smallUp);
   inlineSearch();
-  console.log("HERE!!!");
 }
 function changebigdropmenu(){
   $("#upTag").remove();
@@ -43,14 +42,12 @@ function changebigdropmenu(){
 }
 
 function inlineSearch(){
-  $("#inline-search").remove();
-  $("#nav-search").remove();
+  $("#search-nav").empty();
   $("#search-nav").append(smallSearch);
 }
 
 function fullSearch(){
-  $("#inline-search").remove();
-  $("#nav-search").remove();
+  $("#search-nav").empty();
   $("#search-nav").append(bigSearch);
 }
 
@@ -59,9 +56,9 @@ function bigscreen(){
   changebigdropmenu();
 }
 
-var fullUp = '<a id="ref-wrap" href ="/upload.html"><button type="button" id ="upload-button" class="btn btn-default">upload</button></a>';
+var fullUp = '<a id="ref-wrap" href ="/upload.html"><button type="button" id ="upload-button" class="btn btn-default">Upload</button></a>';
 var smallUp = '<li id="upTag"><a href="/upload.html">Upload</a></li>';
 var fullaccount = '<div class="btn-group" id="account-btn"><button type="button"  class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Account <span class="caret"></span></button><ul class="dropdown-menu"><li><a href="/myupvoteposts.html">Upvoted</a></li><li><a href="/myposts.html">My posts</a></li><li><a href="/account.html">Change password</a></li><li role="separator" class="divider"></li><li onclick="signout()"><a href="#">Sign out</a></li></ul></div>';
-var bigSearch='<div id ="nav-search"><span class="search-form"><input type="text" class="form-control" id="searchInput" placeholder="Search"/></span><span class="search-button"><button type="submit" class="btn btn-default">Search</button></span></div>'
+var bigSearch='<div id ="nav-search"><span class="search-form"><input type="text" class="form-control" id="searchInput" placeholder="Search"/></span><span class="search-button"><button type="submit" class="btn btn-default">Search</button></span></div>';
 var smallAccount ='<a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" id="dropdown-account"> Account <span class="caret"></span></a><ul class="dropdown-menu"> <li><a href="/myupvoteposts.html">Upvoted</a></li><li><a href="/myposts.html">My posts</a></li><li><a href="/account.html">Change password</a></li> <li role="separator" class="divider"></li><li onclick="signout()"><a href="#">Sign out</a></li></ul>';
-var smallSearch='<div class="row" id="inline-search"><div class="col-xs-9"><input class="form-control" type="text" id="searchInput" placeholder="Search"/></div><div class="cl-xs-3"><button type="submit" class="btn btn-default">Search</button></div></div>'
+var smallSearch='<div class="row" id="inline-search"><div class="col-xs-8"><input class="form-control" type="text" id="searchInput" placeholder="Search"/></div><div class="cl-xs-3"><button type="submit" class="btn btn-default">Search</button></div></div>';
